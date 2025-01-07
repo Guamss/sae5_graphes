@@ -1,12 +1,5 @@
+import sys
 from typing import Union
-from sys import maxsize
-from queue import Queue
-import random
-
-from exceptions import NotConnectedGraphException
-
-WALL: int = maxsize  # on prend un entier très grand pour définir ce qu'est un mur
-
 
 class Sommet:
     def __init__(self, weight: int, x: int, y: int) -> None:
@@ -28,9 +21,6 @@ class Sommet:
         self.x: int = x  # La ligne
         self.y: int = y  # La colonne
         self.visited = False
-
-    # self.is_start = False
-    # self.is_end = False
 
     def set_weight(self, weight: int):
         self.weight: int = weight
@@ -69,8 +59,9 @@ class Grille:
     def __init__(self, height: int, width: int) -> None:
         self.height: int = height
         self.width: int = width
+        self.WALL: int = sys.maxsize # on prend un entier très grand pour définir ce qu'est un mur
         self.tab: list[list[Sommet]] = \
-            [[Sommet(random.randint(1, 10), x, y) for y in range(width)] for x in range(height)]
+            [[Sommet(1, x, y) for y in range(width)] for x in range(height)]
         self.paths: dict = {}
 
     def __str__(self) -> str:
@@ -160,7 +151,7 @@ class Grille:
 
         return {start: visited}
 
-    def run_parcours_dijkstra(self, start: Sommet, end: Sommet) -> dict[Sommet, set[Sommet]]:
+    def parcours_dijkstra(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         queue: list[tuple[Sommet, int, Union[Sommet, None]]] = [(start, 0, start)]
         visited: list[tuple[Sommet, int, Union[Sommet, None]]] = []
 
@@ -170,9 +161,9 @@ class Grille:
             current[0].visited = True
             for neighbor in self.get_neighbors(current[0]):
 
-                # --- Zone parallèlisable
+                # --- Zone parallèlisable (on verra si c'est nécessaire)
 
-                if not neighbor.visited:
+                if not neighbor.visited and neighbor.weight != self.WALL:
                     is_in_queue = False
                     for t in queue:
                         if t[0] == neighbor:
@@ -185,31 +176,31 @@ class Grille:
 
                 # --- Fin de zone
 
-            queue.sort(key=lambda t: t[1])
-
-        # --- Zone calcul du meilleur parcours / TODO : à renvoyer en tuple pour la meilleur possibilité
-        #
-        # back: list[tuple[Sommet, int, Union[Sommet, None]]] = []
-        # for t in visited:
-        #     if t[0].x == end.x and t[0].y == end.y:
-        #         back.append(t)
-        #         visited.remove(t)
-        #
-        # while back[-1][0].x != start.x or back[-1][0].y != start.y:
-        #     for t in visited:
-        #         if t[0].x == back[-1][2].x and t[0].y == back[-1][2].y:
-        #             back.append(t)
-        #             visited.remove(t)
-        #
-        # result: list[Sommet] = []
-        # for i in range(len(back) - 1, -1, -1):
-        #     result.append(back[i][0])
-        #
-        # --- Fin de zone
+                queue.sort(key=lambda t: t[1])
 
         dico_all_result = self.get_all_result_dict(visited)
 
-        return dico_all_result
+        back: list[tuple[Sommet, int, Union[Sommet, None]]] = []
+        for t in visited:
+            if t[0].x == end.x and t[0].y == end.y:
+                back.append(t)
+                visited.remove(t)
+
+        while back[-1][0].x != start.x or back[-1][0].y != start.y:
+            for t in visited:
+                if t[0].x == back[-1][2].x and t[0].y == back[-1][2].y:
+                    back.append(t)
+                    visited.remove(t)
+
+        result: list[Sommet] = []
+        for i in range(len(back) - 1, -1, -1):
+            result.append(back[i][0])
+
+        dico_result: dict[Sommet, Sommet] = dict()
+        for i in range(len(result)-1):
+            dico_result[result[i]] = result[i+1]
+
+        return dico_all_result, dico_result
 
     @staticmethod
     def get_all_result_dict(visited: list[tuple[Sommet, int, Union[Sommet, None]]]) -> dict[Sommet, set[Sommet]]:
@@ -259,37 +250,48 @@ class Grille:
 
         return self.get_all_result_dict(visited)
 
-    def bellman_ford(self, start: Sommet, end: Sommet):
+    def bellman_ford(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, int], dict[Sommet, Sommet]]:
         """
-        Implémentation de l'algorithme de Bellman-Ford pour trouver le plus court chemin entre deux sommets.
+        Implémentation de l'algorithme de Bellman-Ford pour trouver le plus court chemin entre
+        un sommet de départ et tous les autres sommets, en détectant les cycles négatifs.
+
+        Args:
+            start (Sommet): Le sommet de départ
+            end (Sommet): Le sommet de fin
+
+        Returns:
+            tuple[dict[Sommet, int], dict[Sommet, Sommet]]:
+                - Un dictionnaire contenant les distances minimales à chaque sommet.
+                - Un dictionnaire contenant les prédécesseurs de chaque sommet pour reconstruire le chemin.
         """
-        # 1. Initialisation des distances et des prédécesseurs
+        # Initialisation
         distances = {sommet: float('inf') for ligne in self.tab for sommet in ligne}
         predecessors = {sommet: None for ligne in self.tab for sommet in ligne}
         distances[start] = 0
 
-        # 2. Relaxation des arêtes sur |V|-1 itérations
-        for _ in range(len(distances) - 1):
-            for sommet in distances:
-                for voisin, poids in sommet.voisins:
-                    # Calcul de la nouvelle distance
-                    nouvelle_distance = distances[sommet] + poids
-                    if nouvelle_distance < distances[voisin]:
-                        distances[voisin] = nouvelle_distance
-                        predecessors[voisin] = sommet
+        # Relaxation des arêtes |V|-1 fois (V = nombre de sommets)
+        for _ in range(self.height * self.width - 1):
+            for ligne in self.tab:
+                for sommet in ligne:
+                    for neighbor in self.get_neighbors(sommet):
+                        # Relâchement de l'arête (sommet -> neighbor)
+                        if distances[sommet] + neighbor.weight < distances[neighbor]:
+                            distances[neighbor] = distances[sommet] + neighbor.weight
+                            predecessors[neighbor] = sommet
 
-        # 3. Vérification des chemins manquants (ce qui est déjà fait dans les passes précédentes)
+        # Vérification des cycles négatifs
+        for ligne in self.tab:
+            for sommet in ligne:
+                for neighbor in self.get_neighbors(sommet):
+                    if distances[sommet] + neighbor.weight < distances[neighbor]:
+                        raise ValueError("Le graphe contient un cycle de poids négatif.")
 
-        # 4. Récupérer le plus court chemin
-        if distances[end] == float('inf'):
-            return None, None  # Aucun chemin trouvé
-
-        # Construction du plus court chemin sous forme de liste
-        chemin = []
+        # Reconstruction du chemin de start à end
+        path = []
         current = end
-        while current is not None:
-            chemin.append(current)
+        while current:
+            path.append(current)
             current = predecessors[current]
-        chemin.reverse()  # Le chemin doit être dans l'ordre du départ à l'arrivée
+        path.reverse()
 
-        return distances, chemin  # Renvoie les distances et le chemin
+        return distances, path

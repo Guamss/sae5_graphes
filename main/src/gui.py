@@ -1,6 +1,7 @@
 from tkinter import *
 from math import cos, sin, sqrt, radians
 import random
+from models import Grille
 
 
 class ColorHexagon:
@@ -37,15 +38,15 @@ class ColorHexagon:
 
 
 class App(Tk):
-    def __init__(self):
+    def __init__(self, num_cols, num_rows):
         Tk.__init__(self)
         self.title("Hexagones")
         self.geometry("800x600")
 
         # Définir la taille initiale de la grille
         self.hex_size = 20
-        self.num_cols = 20
-        self.num_rows = 12
+        self.num_cols = num_cols
+        self.num_rows = num_rows
 
         self.hex_width = self.hex_size * 1.5  # Largeur d'un hexagone
         self.hex_height = self.hex_size * sqrt(3)  # Hauteur d'un hexagone
@@ -70,6 +71,10 @@ class App(Tk):
         self.canvas.bind("<Button-1>", self.click)  # Clic simple
         self.canvas.bind("<B1-Motion>", self.drag)  # Dragging avec le clic gauche
 
+        self.grille = Grille(num_cols, num_rows)
+        self.start = self.grille.tab[0][self.num_rows - 1]
+        self.end = self.grille.tab[self.num_cols - 1][0]
+
     def create_buttons(self):
         """
         Crée les boutons et les place en haut de la fenêtre.
@@ -82,7 +87,7 @@ class App(Tk):
         Button(self, text="Parcours en profondeur").grid(row=0, column=3, padx=5, pady=5, sticky=W)
         Button(self, text="Parcours en largeur").grid(row=0, column=4, padx=5, pady=5, sticky=W)
         Button(self, text="Bellman-Ford").grid(row=0, column=5, padx=5, pady=5, sticky=W)
-        Button(self, text="Dijkstra").grid(row=0, column=6, padx=5, pady=5, sticky=W)
+        Button(self, text="Dijkstra", command=self.launch_dijkstra).grid(row=0, column=6, padx=5, pady=5, sticky=W)
         Button(self, text="A*", command=self.a_star).grid(row=0, column=7, padx=5, pady=5, sticky=W)
 
         # Boutons couleurs
@@ -108,7 +113,7 @@ class App(Tk):
         for c in range(cols):
             offset = size * sqrt(3) / 2 if c % 2 else 0
             for r in range(rows):
-                id = f"{c + 1}-{r + 1}"
+                id = f"{c}-{r}"
                 h = ColorHexagon(self.canvas,
                                  c * self.hex_width + self.hex_width / 2,
                                  r * self.hex_height + self.hex_height / 4 + offset,
@@ -133,6 +138,11 @@ class App(Tk):
         """
         self.paint_hexagon(evt.x, evt.y)
 
+
+    def paint_path(self, x, y):
+        hexagon = self.hexagons.get(f"{x}-{y}")
+        self.canvas.itemconfigure(hexagon.id, fill="green")
+
     def paint_hexagon(self, x, y):
         """
         Colorie un hexagone en fonction des coordonnées (x, y)
@@ -144,11 +154,31 @@ class App(Tk):
                 hex_id = tags[0]  # Le premier tag correspond à l'ID de l'hexagone
                 hexagon = self.hexagons.get(hex_id)  # Récupère l'hexagone correspondant
                 if hexagon:
+                    y, x = hex_id.split("-")
+                    x = int(x)
+                    y = int(y)
                     # S'il s'agit d'un Départ/Objectif, on remplace le précédent
                     if self.selected_color in ["magenta", "red"]:
                         self.unique_color_replace()
+                        self.grille.tab[x][y].weight = 1
+
                     # On colorie l'hexagone sélectionné
                     hexagon.color = self.selected_color
+                    if self.selected_color == "black":
+                        self.grille.tab[x][y].weight = self.grille.WALL
+                    elif self.selected_color == "white":
+                        self.grille.tab[x][y].weight = 1
+                    elif self.selected_color == "red":
+                        self.end = self.grille.tab[x][y]
+                    elif self.selected_color == "magenta":
+                        self.start = self.grille.tab[x][y]
+                    elif self.selected_color == "blue":
+                        self.grille.tab[x][y].weight = 10
+                    elif self.selected_color == "green":
+                        self.grille.tab[x][y].weight = 20
+                    else:
+                        self.grille.tab[x][y].weight = 30
+
                     self.canvas.itemconfigure(closest[0], fill=self.selected_color)
                     # print(f"Hexagone {hex_id} colorié en {self.selected_color}")
 
@@ -157,13 +187,19 @@ class App(Tk):
             if hexagon.color == self.selected_color:
                 hexagon.color = "white"
                 self.canvas.itemconfigure(hexagon.id, fill="white")
+
     def clear_all(self):
         """
         Réinitialise tous les hexagones à blanc
         """
         for hexagon in self.hexagons.values():
-            hexagon.color = "white"
-            self.canvas.itemconfigure(hexagon.id, fill="white")
+            y, x = hexagon.id.split("-")
+            x = int(x)
+            y = int(y)
+            if hexagon.color != 'magenta' and hexagon.color != 'red':
+                self.grille.tab[x][y].weight = 1
+                hexagon.color = "white"
+                self.canvas.itemconfigure(hexagon.id, fill="white")
 
     def clear_results(self):
         """
@@ -183,12 +219,12 @@ class App(Tk):
 
     def init_hexagones(self):
         # Initialisation du départ en bas à gauche
-        startHexagon = self.hexagons.get(f"{1}-{self.num_rows}")
+        startHexagon = self.hexagons.get(f"{0}-{self.num_rows - 1}")
         startHexagon.color = "magenta"
         self.canvas.itemconfigure(startHexagon.id, fill="magenta")
 
         # Initialisation de l'objectif en haut à droite
-        endHexagon = self.hexagons.get(f"{self.num_cols}-{1}")
+        endHexagon = self.hexagons.get(f"{self.num_cols - 1}-{0}")
         endHexagon.color = "red"
         self.canvas.itemconfigure(endHexagon.id, fill="red")
 
@@ -198,7 +234,18 @@ class App(Tk):
         """
         pass
 
+    def launch_dijkstra(self):
+        for i in range(len(self.grille.tab)):
+            for j in range(len(self.grille.tab[i])):
+                self.grille.tab[i][j].visited = False
 
-if __name__ == '__main__':
-    app = App()
-    app.mainloop()
+        chemins = self.grille.parcours_dijkstra(self.start, self.end)
+
+        self._progressive_display(chemins[0], {self.start})
+        print(chemins[0])
+
+    def _progressive_display(self, chemin, sommets):
+        for sommet in sommets:
+            self.paint_path(sommet.x, sommet.y)
+        self.after(1000, self._progressive_display, chemin, chemin[sommet])
+
