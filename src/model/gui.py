@@ -1,5 +1,6 @@
 from tkinter import *
 from math import cos, sin, sqrt, radians
+import random
 
 
 class ColorHexagon:
@@ -60,7 +61,7 @@ class App(Tk):
         self.create_buttons()
 
         # Création de la grille d'hexagones
-        self.hexagons = []
+        self.hexagons = {}
         self.init_grid(self.num_cols, self.num_rows, self.hex_size)
 
         self.selected_color = "black"  # Couleur sélectionnée par défaut (noir)
@@ -105,7 +106,6 @@ class App(Tk):
         """
         Initialise une grille 2D d'hexagones, un départ et un objectif
         """
-        self.hexagons = {}
         for c in range(cols):
             offset = size * sqrt(3) / 2 if c % 2 else 0
             for r in range(rows):
@@ -171,11 +171,11 @@ class App(Tk):
         """
         Applique des couleurs aléatoires aux hexagones
         """
-        import random
         colors = ["black", "white", "blue", "green", "yellow"]
-        for hexagon in self.hexagons:
+        print(self.hexagons)
+        for hexagon in self.hexagons.values():
             random_color = random.choice(colors)
-            self.hexagons.color = self.random_color
+            hexagon.color = random_color
             self.canvas.itemconfigure(hexagon.id, fill=random_color)
 
     def a_star(self):
