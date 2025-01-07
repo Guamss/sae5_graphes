@@ -108,12 +108,20 @@ class App(Tk):
         for c in range(cols):
             offset = size * sqrt(3) / 2 if c % 2 else 0
             for r in range(rows):
+                color = "white"
                 id = f"{c + 1}-{r + 1}"
+                # Initialisation du départ en bas à gauche
+                if (id == f"{1}-{rows}"):
+                    color = "magenta"
+                # Initialisation de l'objectif en haut à droite
+                if (id == f"{cols}-{1}"):
+                    color = "red"
+
                 h = ColorHexagon(self.canvas,
                                  c * self.hex_width + self.hex_width / 2,
                                  r * self.hex_height + self.hex_height / 4 + offset,
                                  size,
-                                 "white",
+                                 color,
                                  id)
                 self.hexagons[id] = h
 
@@ -148,10 +156,10 @@ class App(Tk):
                     # S'il s'agit d'un Départ/Objectif, on remplace le précédent
                     if self.selected_color in ["magenta", "red"]:
                         self.unique_color_replace()
-                    # On colorie l'hexagone selectionné
+                    # On colorie l'hexagone sélectionné
                     hexagon.color = self.selected_color
                     self.canvas.itemconfigure(closest[0], fill=self.selected_color)
-
+                    # print(f"Hexagone {hex_id} colorié en {self.selected_color}")
 
     def unique_color_replace(self):
         for hexagon in self.hexagons.values():
