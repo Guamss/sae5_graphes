@@ -108,24 +108,16 @@ class App(Tk):
         for c in range(cols):
             offset = size * sqrt(3) / 2 if c % 2 else 0
             for r in range(rows):
-                color = "white"
                 id = f"{c + 1}-{r + 1}"
-                # Initialisation du départ en bas à gauche
-                if (id == f"{1}-{rows}"):
-                    color = "magenta"
-                # Initialisation de l'objectif en haut à droite
-                if (id == f"{cols}-{1}"):
-                    color = "red"
-
                 h = ColorHexagon(self.canvas,
                                  c * self.hex_width + self.hex_width / 2,
                                  r * self.hex_height + self.hex_height / 4 + offset,
                                  size,
-                                 color,
+                                 "white",
                                  id)
                 self.hexagons[id] = h
 
-            # TODO : peindre le Départ et la fin
+            self.init_hexagones()
 
     def set_color(self, color):
         self.selected_color = color
@@ -189,6 +181,20 @@ class App(Tk):
             random_color = random.choice(colors)
             hexagon.color = random_color
             self.canvas.itemconfigure(hexagon.id, fill=random_color)
+
+    def init_hexagones(self):
+        # Initialisation du départ en bas à gauche
+        startHexagon = self.hexagons.get(f"{1}-{self.num_rows}")
+        startHexagon.color = "magenta"
+        self.canvas.itemconfigure(startHexagon, fill="magenta")
+
+        # Initialisation de l'objectif en haut à droite
+        endHexagon = self.hexagons.get(id == f"{self.num_cols}-{1})")
+        endHexagon.color = "red"
+        self.canvas.itemconfigure(endHexagon, fill="red")
+
+        # TODO : debugger cette fonction de façon a avoir un départ et une arrivée
+
 
     def a_star(self):
         """
