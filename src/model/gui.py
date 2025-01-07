@@ -147,7 +147,6 @@ class App(Tk):
                 if hexagon:
                     hexagon.color = self.selected_color
                     self.canvas.itemconfigure(closest[0], fill=self.selected_color)
-                    print(f"Hexagone {hex_id} colorié en {self.selected_color}")
 
 
     def unique_color_check(self, color):
@@ -172,7 +171,6 @@ class App(Tk):
         Applique des couleurs aléatoires aux hexagones
         """
         colors = ["black", "white", "blue", "green", "yellow"]
-        print(self.hexagons)
         for hexagon in self.hexagons.values():
             random_color = random.choice(colors)
             hexagon.color = random_color
