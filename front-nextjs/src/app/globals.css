@@ -2,20 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-gray-100 text-gray-800;
+  font-family: 'Inter', sans-serif;
 }
+.hexagon {
+  width: 4rem; /* Largeur de l'hexagone */
+  height: 4rem; /* Hauteur de l'hexagone */
+  clip-path: polygon(
+    25% 6.7%,
+    75% 6.7%,
+    100% 50%,
+    75% 93.3%,
+    25% 93.3%,
+    0% 50%
+  );
+  background-color: #f3f4f6; /* Couleur de fond */
+  transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+  margin-right: -1rem; /* Réduction du chevauchement */
+}
+
+.hexagon:hover {
+  background-color: #bfdbfe; /* Survol */
+  transform: scale(1.05);
+}
+

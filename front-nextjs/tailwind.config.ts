@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import colors from "tailwindcss/colors";
 
 export default {
   content: [
@@ -11,6 +12,13 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        noir: colors.black,
+        blanc: colors.white,
+        bleu: colors.blue,
+        vert: colors.green,
+        jaune: colors.yellow,
+        depart: colors.pink,
+        objectif: colors.red,
       },
     },
   },
