@@ -64,12 +64,11 @@ class App(Tk):
         self.hexagons = {}
         self.init_grid(self.num_cols, self.num_rows, self.hex_size)
 
-        self.selected_color = "black"  # Couleur sélectionnée par défaut (noir)
+        self.selected_color = "black"  # Couleur sélectionnée par défaut pour dessiner
 
         # Liaisons des événements
         self.canvas.bind("<Button-1>", self.click)  # Clic simple
         self.canvas.bind("<B1-Motion>", self.drag)  # Dragging avec le clic gauche
-
 
     def create_buttons(self):
         """
@@ -119,6 +118,7 @@ class App(Tk):
                 self.hexagons[id] = h
 
             # TODO : peindre le Départ et la fin
+
     def set_color(self, color):
         self.selected_color = color
 
@@ -142,16 +142,22 @@ class App(Tk):
         if closest:
             tags = self.canvas.gettags(closest[0])
             if tags:
-                hex_id = tags[0]  # Le premier tag correspond à l'ID
-                hexagon = self.hexagons.get(hex_id)  # Accès direct au dictionnaire
+                hex_id = tags[0]  # Le premier tag correspond à l'ID de l'hexagone
+                hexagon = self.hexagons.get(hex_id)  # Récupère l'hexagone correspondant
                 if hexagon:
+                    # S'il s'agit d'un Départ/Objectif, on remplace le précédent
+                    if self.selected_color in ["magenta", "red"]:
+                        self.unique_color_replace()
+                    # On colorie l'hexagone selectionné
                     hexagon.color = self.selected_color
                     self.canvas.itemconfigure(closest[0], fill=self.selected_color)
 
 
-    def unique_color_check(self, color):
-        pass
-
+    def unique_color_replace(self):
+        for hexagon in self.hexagons.values():
+            if hexagon.color == self.selected_color:
+                hexagon.color = "white"
+                self.canvas.itemconfigure(hexagon.id, fill="white")
     def clear_all(self):
         """
         Réinitialise tous les hexagones à blanc
@@ -186,5 +192,3 @@ class App(Tk):
 if __name__ == '__main__':
     app = App()
     app.mainloop()
-
-
