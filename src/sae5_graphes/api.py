@@ -25,10 +25,31 @@ def get_grid():
     Obtenir la grille entière sous forme de tableau 2D.
     """
     response = {
-        "width": grille.width,
-        "height": grille.height
+        "height": grille.height,
+        "width": grille.width
     }
     return jsonify(response), 200
+
+
+@app.route('/editGrid', methods=['PUT'])
+@api.validate(tags=["Grid"], json=GrilleDimensions)
+def edit_grid(json: GrilleDimensions):
+    """
+    Modifie la grille entière sous forme de tableau 2D
+    """
+    try:
+        # Gestion taille trop grande/petite
+        if json.height > 1000 or json.width > 1000:
+            return jsonify({"error": "La grille a une taille trop grande"}), 400
+        if json.height < 2 or json.width < 2:
+            return jsonify({"error": "La grille a une taille trop petite"}), 400
+
+        # [Requête back-end] - MAJ de la grille
+        global grille
+        grille = models.Grille(json.height, json.width)
+        return jsonify({"height": grille.height, "width": grille.width}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
