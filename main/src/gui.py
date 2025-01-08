@@ -3,7 +3,8 @@ from math import cos, sin, sqrt, radians
 import random
 
 from exceptions import NotConnectedGraphException
-from models import Grille
+from models import Grille, Sommet
+
 
 # TODO faire des constantes pour les couleurs (code rgb)
 
@@ -41,10 +42,10 @@ class ColorHexagon:
 
 
 class App(Tk):
-    def __init__(self, num_cols, num_rows):
+    def __init__(self, num_cols, num_rows, window_width, window_height):
         super().__init__()
         self.title("Hexagones")
-        self.geometry("800x600")
+        self.geometry(f"{window_width}x{window_height}")
 
         # Définir la taille initiale de la grille
         self.hex_size = 20
@@ -68,6 +69,7 @@ class App(Tk):
         self.selected_color = "black"  # Couleur sélectionnée par défaut pour dessiner
 
         # Liaisons des événements
+        self.bind("<Configure>", self.on_resize)
         self.canvas.bind("<Button-1>", self.click)  # Clic simple
         self.canvas.bind("<B1-Motion>", self.drag)  # Dragging avec le clic gauche
 
@@ -86,24 +88,30 @@ class App(Tk):
         Crée les elements et les boutons et les place en haut de la fenêtre. TODO docstring a refaire
         """
         # Boutons d'en haut, Algo etc
-        Button(self, text="Effacer Tout", command=self.clear_all).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+        Button(self, text="Effacer Tout", command=self.clear_all).grid(row=0, column=0, padx=5, pady=5, sticky="news")
         Button(self, text="Effacer Résultats", command=self.clear_arrows).grid(row=0, column=1, padx=5, pady=5,
-                                                                                sticky="ew")
-        Button(self, text="Répartir les poids aléatoirement", command=self.random_colors).grid(row=0, column=2, padx=5, pady=5, sticky="ew")
-        Button(self, text="Parcours en profondeur", command=self.launch_parcours_en_profondeur).grid(row=0, column=3, padx=5, pady=5, sticky="ew")
-        Button(self, text="Parcours en largeur", command=self.launch_parcours_en_largeur).grid(row=0, column=4, padx=5, pady=5, sticky="ew")
-        Button(self, text="Bellman-Ford", command=self.launch_bellman_ford).grid(row=0, column=5, padx=5, pady=5, sticky="ew")
-        Button(self, text="Dijkstra", command=self.launch_dijkstra).grid(row=0, column=6, padx=5, pady=5, sticky="ew")
-        Button(self, text="A*", command=self.a_star).grid(row=0, column=7, padx=5, pady=5, sticky="ew")
-        Button(self, text="AllerÀToire", command=self.launch_allerAToire).grid(row=0, column=8, padx=5, pady=5, sticky="ew")
+                                                                               sticky="news")
+        Button(self, text="Répartir les poids aléatoirement", command=self.random_colors).grid(row=0, column=2, padx=5,
+                                                                                               pady=5, sticky="news")
+        Button(self, text="Parcours en profondeur", command=self.launch_parcours_en_profondeur).grid(row=0, column=3,
+                                                                                                     padx=5, pady=5,
+                                                                                                     sticky="news")
+        Button(self, text="Parcours en largeur", command=self.launch_parcours_en_largeur).grid(row=0, column=4, padx=5,
+                                                                                               pady=5, sticky="news")
+        Button(self, text="Bellman-Ford", command=self.launch_bellman_ford).grid(row=0, column=5, padx=5, pady=5,
+                                                                                 sticky="news")
+        Button(self, text="Dijkstra", command=self.launch_dijkstra).grid(row=0, column=6, padx=5, pady=5, sticky="news")
+        Button(self, text="A*", command=self.a_star).grid(row=0, column=7, padx=5, pady=5, sticky="news")
+        Button(self, text="AllerÀToire", command=self.launch_allerAToire).grid(row=0, column=8, padx=5, pady=5,
+                                                                               sticky="news")
         (Scale(self, variable=self.speed, from_=1, to=1000, orient=HORIZONTAL)
-         .grid(row=3, column=8, padx=5, pady=5, sticky="ew"))
+         .grid(row=3, column=8, padx=5, pady=5, sticky="news"))
 
         # Boutons couleurs
         (Button(self, text="Noir", bg="black", fg="white", command=lambda: self.set_color("black"))
          .grid(row=1, column=0, padx=5, pady=5, sticky="ew"))
         (Button(self, text="Blanc", bg="white", fg="black", command=lambda: self.set_color("white"))
-         .grid(row=2, column=0, padx=5, pady=5, sticky="ew"))
+         .grid(row=2, column=0, padx=5, pady=5, sticky="news"))
         (Button(self, text="Bleu", bg="blue", fg="white", command=lambda: self.set_color("blue"))
          .grid(row=3, column=0, padx=5, pady=5, sticky="ew"))
         (Button(self, text="Vert", bg="green", fg="white", command=lambda: self.set_color("green"))
@@ -114,7 +122,6 @@ class App(Tk):
          .grid(row=6, column=0, padx=5, pady=5, sticky="ew"))
         (Button(self, text="Objectif", bg="red", fg="white", command=lambda: self.set_color("red"))
          .grid(row=7, column=0, padx=5, pady=5, sticky="ew"))
-
 
     def init_grid(self, cols, rows, size):
         """
@@ -172,7 +179,7 @@ class App(Tk):
     def paint_hexagon(self, x: int, y: int, color: str):
         hexagon = self.hexagons.get(f"{x}-{y}")
 
-        if color in ["magenta", "red"]: # Départ ou arrivée
+        if color in ["magenta", "red"]:  # Départ ou arrivée
             self.unique_color_replace()
             self.grille.tab[x][y].weight = 1
 
@@ -194,7 +201,20 @@ class App(Tk):
                 self.grille.tab[y][x].weight = 10
 
         self.canvas.itemconfigure(hexagon.id, fill=color)
-        #self.canvas.itemconfigure(closest[0], fill=color)
+        # self.canvas.itemconfigure(closest[0], fill=color)
+
+    def on_resize(self, event):
+        height = self.winfo_height()
+        width = self.winfo_width()
+
+        self.hex_size = (height*0.6) / self.num_cols / sqrt(3)  # TODO : trouver relation de hex_size
+        self.hex_width = width * 0.6 / self.num_cols
+        self.hex_height = height * 0.6 / self.num_rows
+        self.canvas.config(width=width * 0.6, height=height * 0.6)
+
+        self.canvas.delete("all")
+
+        self.init_grid(self.num_cols, self.num_rows, self.hex_width)
 
     def paint_hexagon_on_click(self, x, y):
         """
@@ -210,8 +230,9 @@ class App(Tk):
 
                     row, col = map(int, hex_id.split("-"))
 
-                    color = self.selected_color
-                    self.paint_hexagon(row, col, color)
+                    if not self.is_sommet_start_or_end(self.grille.tab[row][col]):
+                        color = self.selected_color
+                        self.paint_hexagon(row, col, color)
 
     def unique_color_replace(self):
         for hexagon in self.hexagons.values():
@@ -242,6 +263,10 @@ class App(Tk):
         """
         pass
 
+    def is_sommet_start_or_end(self, sommet: Sommet):
+        return (self.start.x == sommet.x and self.start.y == sommet.y) or (
+                self.end.x == sommet.x and self.end.y == sommet.y)
+
     def random_colors(self):
         """
         Applique des couleurs aléatoires aux hexagones
@@ -251,8 +276,7 @@ class App(Tk):
             random_color = random.choice(colors)
             col, row = map(int, hex_id.split("-"))
 
-            if ((self.grille.tab[row][col].x != self.start.x or self.grille.tab[row][col].y != self.start.y)
-                    and (self.grille.tab[row][col].x != self.end.x or self.grille.tab[row][col].y != self.end.y)): ## Ne colorie pas le départ ni l'arrivée
+            if not self.is_sommet_start_or_end(self.grille.tab[row][col]):
                 self.paint_hexagon(col, row, random_color)
 
     def init_hexagones(self):

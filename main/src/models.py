@@ -24,10 +24,6 @@ class Sommet:
         self.y: int = y  # La colonne
         self.visited = False
 
-    def set_weight(self, weight: int):
-        self.weight: int = weight
-        return self
-
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Sommet):
             return False
@@ -55,7 +51,6 @@ class Grille:
             height (int): hauteur de la grille
             width (int): largeur de la grille
             tab (list[list[Sommet]]): tableau 2D des sommets potentiel du graphe
-            paths (dict): liste des chemins trouvés par un algorithme
     """
 
     def __init__(self, height: int, width: int) -> None:
@@ -64,7 +59,6 @@ class Grille:
         self.WALL: int = sys.maxsize # on prend un entier très grand pour définir ce qu'est un mur
         self.tab: list[list[Sommet]] = \
             [[Sommet(1, x, y) for y in range(width)] for x in range(height)]
-        self.paths: dict = {}
 
     def __str__(self) -> str:
         out: str = ""
@@ -276,6 +270,9 @@ class Grille:
 
         return dico_all_result, dico_result # ca pue du cul
 
+    import random
+
+    import random
 
     def allerAToire(self, start: Sommet, end: Sommet) -> tuple[
         dict[Sommet, set[Sommet]], dict[tuple[int, int], tuple[int, int]]]:
@@ -293,7 +290,7 @@ class Grille:
         """
         queue: list[Sommet] = [start]
         reachable: dict[Sommet, set[Sommet]] = {start: set()}
-        path: dict[Sommet, Sommet] = {}
+        path: dict[tuple[int, int], tuple[int, int]] = {}
         end_reached: bool = False  # Drapeau pour indiquer si la fin est atteinte
 
         while queue and not end_reached:
@@ -303,19 +300,25 @@ class Grille:
             reachable[current] = neighbors
 
             if neighbors:
-                not_walls = []
-                for neighbor in neighbors:
-                    if neighbor.weight != self.WALL:
-                        not_walls.append(neighbor)
+                not_walls = [neighbor for neighbor in neighbors if neighbor.weight != self.WALL]
                 reachable[current] = set(not_walls)
-                neighbor = random.choice(list(not_walls))
-                queue.append(neighbor)
-                path[current] = queue[0]
+                if not_walls:
+                    neighbor = random.choice(not_walls)
+                    queue.append(neighbor)
+                    path[(current.x, current.y)] = (neighbor.x, neighbor.y)
 
-                if neighbor == end:
-                    end_reached = True
+                    if neighbor == end:
+                        end_reached = True
+                else:
+                    # Si tous les voisins sont des murs, afficher un message
+                    raise NotConnectedGraphException()
+
+        # Vérifier si le sommet de fin n'est jamais atteint
+        if not end_reached:
+            raise NotConnectedGraphException()
 
         return reachable, path
+
 
     def bron_kerbosch(self) -> list[set[Sommet]]:
         """
@@ -355,10 +358,11 @@ class Grille:
     def bellman_ford(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         # Initialisation des distances avec l'infini (sys.maxsize)
         distances = {sommet: sys.maxsize for ligne in self.tab for sommet in ligne}
-        predecessors = {sommet: None for ligne in self.tab for sommet in ligne}  # Dictionnaire des prédécesseurs
-        next_nodes = {sommet: set() for ligne in self.tab for sommet in ligne}  # Dictionnaire des voisins sélectionnés
+        predecessors: dict[Sommet, Union[Sommet, None]] = {sommet: None for ligne in self.tab for sommet in ligne}  # Dictionnaire des prédécesseurs
+        next_nodes = {}  # Dictionnaire des voisins sélectionnés, construit dynamiquement dans l'ordre des visites
 
         distances[start] = 0
+        visited_order = []  # Liste pour suivre l'ordre des visites des sommets
 
         # Pour chaque sommet, on met à jour les distances en fonction des voisins
         for _ in range(len(self.tab) * len(self.tab[0]) - 1):  # Pas besoin de vérifier après len(grille) - 1 itérations
@@ -369,7 +373,12 @@ class Grille:
                         if distances[voisin] > distances[sommet] + voisin.weight:
                             distances[voisin] = distances[sommet] + voisin.weight
                             predecessors[voisin] = sommet
-                            next_nodes[sommet].add(voisin)  # Ajout du voisin choisi
+
+                            # Ajout au dictionnaire dans l'ordre de traitement
+                            if sommet not in next_nodes:
+                                next_nodes[sommet] = set()
+                                visited_order.append(sommet)  # Ajouter le sommet à la liste d'ordre
+                            next_nodes[sommet].add(voisin)
 
         # Vérification des cycles négatifs (optionnel selon le contexte)
         for ligne in self.tab:
@@ -391,8 +400,11 @@ class Grille:
         if distances[end] == sys.maxsize:
             raise NotConnectedGraphException()
 
+        # Réorganisation finale de `next_nodes` selon l'ordre de visite
+        ordered_next_nodes = {sommet: next_nodes[sommet] for sommet in visited_order}
+
         # Retourner les deux dictionnaires dans un tuple
-        return next_nodes, shortest_path_dict
+        return ordered_next_nodes, shortest_path_dict
 
     def a_star(self, start: Sommet, end: Sommet):
         queue: list[tuple[Sommet, int, Union[Sommet, None]]] = [(start, 0, start)]
