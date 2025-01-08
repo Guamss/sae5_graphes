@@ -18,7 +18,7 @@ class GrilleDimensions(BaseModel):
 
 
 @app.route('/getGridDimensions', methods=['GET'])
-@api.validate(tags=["Grid"])
+@api.validate(tags=["Grille"])
 def get_grid_dimensions():
     """
     Obtenir la grille entière sous de dimensions Hauteur-Largeur.
@@ -36,10 +36,10 @@ def get_grid_dimensions():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/editGrid', methods=['PUT'])
-@api.validate(tags=["Grid"], json=GrilleDimensions)
+@api.validate(tags=["Grille"], json=GrilleDimensions)
 def edit_grid(json: GrilleDimensions):
     """
-    Modifie la grille entière sous forme de tableau 2D
+    Modifie la grille avec les dimensions spécifiées
     """
     try:
         # Gestion taille trop grande/petite
@@ -56,10 +56,10 @@ def edit_grid(json: GrilleDimensions):
         return jsonify({"error": str(e)}), 500
 
 @app.route('/getGridWeights', methods=['GET'])
-@api.validate(tags=["Grid"])
+@api.validate(tags=["Grille"])
 def get_grid_weights():
     """
-    Obtenir la grille entière sous forme de tableau 2D.
+    Obtenir la grille des poids sous forme de tableau 2D.
     """
     try:
         grid_repr = [[sommet.weight for sommet in row] for row in grille.tab]
