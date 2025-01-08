@@ -1,6 +1,8 @@
 from tkinter import *
 from math import cos, sin, sqrt, radians
 import random
+
+from exceptions import NotConnectedGraphException
 from models import Grille
 
 
@@ -21,7 +23,7 @@ class ColorHexagon:
         start_y = self.y
         angle = 60  # Angle de l'hexagone en degrés
 
-        # Création des 6 côtés de l'hexagone
+        # création des 6 côtés de l'hexagone
         coords = []
         for i in range(6):
             end_x = start_x + self.length * cos(radians(angle * i))
@@ -138,10 +140,45 @@ class App(Tk):
         """
         self.paint_hexagon(evt.x, evt.y)
 
+    def get_hexagon_center(self, x, y):
+        """
+        Calcule le centre d'un hexagone en fonction de ses coordonnées (colonne, ligne).
+        """
+        offset = self.hex_size * sqrt(3) / 2 if x % 2 else 0
+        center_x = x * self.hex_width + self.hex_width / 2
+        center_y = y * self.hex_height + self.hex_height / 4 + offset
+        return center_x, center_y
 
-    def paint_path(self, x, y):
-        hexagon = self.hexagons.get(f"{x}-{y}")
-        self.canvas.itemconfigure(hexagon.id, fill="green")
+    def paint_path(self, start, end):
+        """
+        Dessine une flèche entre deux hexagones, avec une tendance visuelle en fonction de la disposition hexagonale.
+        """
+        start_x, start_y = self.get_hexagon_center(start.x, start.y)
+        end_x, end_y = self.get_hexagon_center(end.x, end.y)
+
+        # Ajustements pour une tendance visuelle
+        if start.x < end.x:  # Mouvement vers la droite
+            if start.y % 2 == 0:
+                # Si la colonne de départ est pair, la flèche monte légèrement
+                start_y -= self.hex_size / 3
+                end_y += self.hex_size / 3
+            else:
+                # Si la colonne de départ est impair, la flèche descend légèrement
+                start_y += self.hex_size / 3
+                end_y -= self.hex_size / 3
+        elif start.x > end.x:  # Mouvement vers la gauche
+            if start.y % 2 == 0:
+                start_y += self.hex_size / 3
+                end_y -= self.hex_size / 3
+            else:
+                start_y -= self.hex_size / 3
+                end_y += self.hex_size / 3
+
+        # Dessiner la flèche
+        self.canvas.create_line(
+            start_x, start_y, end_x, end_y,
+            fill="black", width=2, arrow=LAST
+        )
 
     def paint_hexagon(self, x, y):
         """
@@ -173,11 +210,11 @@ class App(Tk):
                     elif self.selected_color == "magenta":
                         self.start = self.grille.tab[x][y]
                     elif self.selected_color == "blue":
-                        self.grille.tab[x][y].weight = 10
+                        self.grille.tab[x][y].weight = 3
                     elif self.selected_color == "green":
-                        self.grille.tab[x][y].weight = 20
+                        self.grille.tab[x][y].weight = 5
                     else:
-                        self.grille.tab[x][y].weight = 30
+                        self.grille.tab[x][y].weight = 10
 
                     self.canvas.itemconfigure(closest[0], fill=self.selected_color)
                     # print(f"Hexagone {hex_id} colorié en {self.selected_color}")
@@ -215,16 +252,17 @@ class App(Tk):
         for hexagon in self.hexagons.values():
             random_color = random.choice(colors)
             hexagon.color = random_color
+            self.paint_hexagon()
             self.canvas.itemconfigure(hexagon.id, fill=random_color)
 
     def init_hexagones(self):
         # Initialisation du départ en bas à gauche
-        startHexagon = self.hexagons.get(f"{0}-{self.num_rows - 1}")
+        startHexagon = self.hexagons.get(f"{self.num_cols - 1}-{0}")
         startHexagon.color = "magenta"
         self.canvas.itemconfigure(startHexagon.id, fill="magenta")
 
         # Initialisation de l'objectif en haut à droite
-        endHexagon = self.hexagons.get(f"{self.num_cols - 1}-{0}")
+        endHexagon = self.hexagons.get(f"{0}-{self.num_rows - 1}")
         endHexagon.color = "red"
         self.canvas.itemconfigure(endHexagon.id, fill="red")
 
@@ -235,17 +273,16 @@ class App(Tk):
         pass
 
     def launch_dijkstra(self):
-        for i in range(len(self.grille.tab)):
-            for j in range(len(self.grille.tab[i])):
-                self.grille.tab[i][j].visited = False
+        self.grille.init_grid()
+        try :
+            chemins = self.grille.parcours_dijkstra(self.start, self.end)
+            self._progressive_display(chemins[1], self.start)
+        except NotConnectedGraphException as e:
+            print(e.message)
 
-        chemins = self.grille.parcours_dijkstra(self.start, self.end)
-
-        self._progressive_display(chemins[0], {self.start})
-        print(chemins[0])
-
-    def _progressive_display(self, chemin, sommets):
-        for sommet in sommets:
-            self.paint_path(sommet.x, sommet.y)
-        self.after(1000, self._progressive_display, chemin, chemin[sommet])
+    def _progressive_display(self, chemin, sommet):
+        if sommet in chemin.keys():
+            suivant = chemin[sommet]
+            self.paint_path(sommet, suivant)
+            self.after(500, self._progressive_display, chemin, suivant)
 

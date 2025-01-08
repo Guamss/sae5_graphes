@@ -1,5 +1,6 @@
 import sys
 from typing import Union
+from exceptions import *
 
 class Sommet:
     def __init__(self, weight: int, x: int, y: int) -> None:
@@ -70,6 +71,11 @@ class Grille:
             out += (" ".join(str(sommet.weight) for sommet in ligne)) + "\n"
         return out
 
+    def init_grid(self):
+        for i in range(len(self.tab)):
+            for j in range(len(self.tab[i])):
+                self.tab[i][j].visited = False
+
     def get_neighbors(self, s: Sommet) -> set[Sommet]:
         """
         Renvoie les voisins du sommet s
@@ -85,7 +91,7 @@ class Grille:
             for j in range(s.y - 1, s.y + 2):
                 if 0 <= i < self.height and 0 <= j < self.width and (i != s.x or j != s.y):  # in Grille && !current
                     if i != s.x and j != s.y:  # Une case angle
-                        if s.y % 2:  # Colone impaire
+                        if s.y % 2:  # Colone
                             if i == s.x + 1:
                                 neighbors.add(self.tab[i][j])
                         else:  # Colone paire
@@ -102,6 +108,7 @@ class Grille:
         revenir en arrière afin de retrouver un voisin non visité. Cette application est faites récursivement
 
         :param start: sommet de départ
+        :param end: sommet d'arrivée
         :return: liste des chemins possible
         """
         # Parcours en profondeur
@@ -180,11 +187,16 @@ class Grille:
 
         dico_all_result = self.get_all_result_dict(visited)
 
-        back: list[tuple[Sommet, int, Union[Sommet, None]]] = []
+        back: list[tuple[Sommet, int, Sommet]] = []
+        found_end = False
         for t in visited:
             if t[0].x == end.x and t[0].y == end.y:
                 back.append(t)
                 visited.remove(t)
+                found_end = True
+
+        if not found_end:
+            raise NotConnectedGraphException()
 
         while back[-1][0].x != start.x or back[-1][0].y != start.y:
             for t in visited:
@@ -250,48 +262,42 @@ class Grille:
 
         return self.get_all_result_dict(visited)
 
-    def bellman_ford(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, int], dict[Sommet, Sommet]]:
+    def AllerAToire(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, int], dict[Sommet, Sommet]]:
+        pass
+
+    def bron_kerbosch(self) -> list[set[Sommet]]:
         """
-        Implémentation de l'algorithme de Bellman-Ford pour trouver le plus court chemin entre
-        un sommet de départ et tous les autres sommets, en détectant les cycles négatifs.
+        Implémente l'algorithme de Bron-Kerbosch pour trouver les ensembles stables maximaux
+        sur un graphe représenté par une grille.
 
         Args:
-            start (Sommet): Le sommet de départ
-            end (Sommet): Le sommet de fin
+            graph (Grille): La grille représentant le graphe.
 
         Returns:
-            tuple[dict[Sommet, int], dict[Sommet, Sommet]]:
-                - Un dictionnaire contenant les distances minimales à chaque sommet.
-                - Un dictionnaire contenant les prédécesseurs de chaque sommet pour reconstruire le chemin.
+            list[set[Sommet]]: Liste des ensembles stables maximaux.
         """
-        # Initialisation
-        distances = {sommet: float('inf') for ligne in self.tab for sommet in ligne}
-        predecessors = {sommet: None for ligne in self.tab for sommet in ligne}
-        distances[start] = 0
+        r = set()  # Ensemble courant
+        p = {sommet for ligne in self.tab for sommet in ligne}  # Sommets à explorer
+        x = set()  # Sommets exclus
+        cliques = []  # Résultat des cliques maximales
 
-        # Relaxation des arêtes |V|-1 fois (V = nombre de sommets)
-        for _ in range(self.height * self.width - 1):
-            for ligne in self.tab:
-                for sommet in ligne:
-                    for neighbor in self.get_neighbors(sommet):
-                        # Relâchement de l'arête (sommet -> neighbor)
-                        if distances[sommet] + neighbor.weight < distances[neighbor]:
-                            distances[neighbor] = distances[sommet] + neighbor.weight
-                            predecessors[neighbor] = sommet
+        stack = [(r, p, x)]  # Pile pour simuler la récursivité
+        while stack:
+            r, p, x = stack.pop()
 
-        # Vérification des cycles négatifs
-        for ligne in self.tab:
-            for sommet in ligne:
-                for neighbor in self.get_neighbors(sommet):
-                    if distances[sommet] + neighbor.weight < distances[neighbor]:
-                        raise ValueError("Le graphe contient un cycle de poids négatif.")
+            if not p and not x:  # Condition de clique maximale
+                cliques.append(r)
+            else:
+                for sommet in list(p):
+                    neighbors = self.get_neighbors(sommet)
+                    stack.append((
+                        r.union({sommet}),
+                        p.intersection(neighbors),
+                        x.intersection(neighbors)
+                    ))
+                    p.remove(sommet)
+                    x.add(sommet)
 
-        # Reconstruction du chemin de start à end
-        path = []
-        current = end
-        while current:
-            path.append(current)
-            current = predecessors[current]
-        path.reverse()
+        return cliques
 
-        return distances, path
+    

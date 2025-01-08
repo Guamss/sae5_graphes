@@ -5,4 +5,5 @@ class BadWeightException(Exception):
 
 class NotConnectedGraphException(Exception):
     def __init__(self):
-        super().__init__("Le Graphe est non connnexe")
+        self.message = "Le Graphe est non connnexe"
+        super().__init__(self.message)
