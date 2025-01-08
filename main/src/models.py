@@ -1,6 +1,7 @@
 import sys
 from typing import Union
 from exceptions import *
+import random
 
 class Sommet:
     def __init__(self, weight: int, x: int, y: int) -> None:
@@ -102,6 +103,9 @@ class Grille:
 
         return neighbors
 
+    def is_connexe(self):
+        start = self.tab[0][0]
+
     def parcours_profondeur(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         """
         Le parcours en profondeur va parcourir le graphe jusqu'à trouver une impasse (sommet sans voisin) et ensuite
@@ -125,7 +129,7 @@ class Grille:
             return True
 
         for neighbor in self.get_neighbors(s):
-            if not neighbor.visited:
+            if not neighbor.visited and neighbor.weight != self.WALL:
                 solution[s] = neighbor
                 if self.parcours_profondeur_recursive(neighbor, visited, solution, end):
                     return True
@@ -226,7 +230,7 @@ class Grille:
                     result[t[2]] = {t[0]}
         return result
 
-    def parcours_en_largeur(self, start: Sommet, end: Sommet) -> dict[Sommet, set[Sommet]]:
+    def parcours_largeur(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         """
         Vérifie si la grille est connexe jusqu'à l'arrivée. Si c'est le cas prend le chemin le plus court, sinon
         relève une NotConnectedGraphException.
@@ -249,7 +253,7 @@ class Grille:
                 visited.append(current)
                 current[0].visited = True
                 for neighbor in self.get_neighbors(current[0]):
-                    if not neighbor.visited:
+                    if not neighbor.visited and neighbor.weight != self.WALL:
                         is_in_queue = False
                         for t in queue:
                             if t[0] == neighbor:
@@ -260,10 +264,58 @@ class Grille:
                         if not is_in_queue:
                             queue.append((neighbor, current[1] + neighbor.weight, current[0]))
 
-        return self.get_all_result_dict(visited)
+        result: list[Sommet] = []
+        for i in range(len(visited) - 1, -1, -1):
+            result.append(visited[i][0])
 
-    def AllerAToire(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, int], dict[Sommet, Sommet]]:
-        pass
+        dico_result: dict[Sommet, Sommet] = dict()
+        for i in range(len(result)-1):
+            dico_result[result[i]] = result[i+1]
+
+        dico_all_result = self.get_all_result_dict(visited)
+
+        return dico_all_result, dico_result # ca pue du cul
+
+
+    def allerAToire(self, start: Sommet, end: Sommet) -> tuple[
+        dict[Sommet, set[Sommet]], dict[tuple[int, int], tuple[int, int]]]:
+        """
+        Parcourt la grille de manière aléatoire de start à end.
+
+        Args:
+            start (Sommet): le sommet de départ
+            end (Sommet): le sommet de fin
+
+        Returns:
+            tuple[dict[Sommet, set[Sommet]], dict[tuple[int, int], tuple[int, int]]]:
+            - Le premier dictionnaire contient les sommets et leurs voisins atteignables sous forme d'ensemble.
+            - Le deuxième dictionnaire contient les coordonnées du chemin parcouru.
+        """
+        queue: list[Sommet] = [start]
+        reachable: dict[Sommet, set[Sommet]] = {start: set()}
+        path: dict[Sommet, Sommet] = {}
+        end_reached: bool = False  # Drapeau pour indiquer si la fin est atteinte
+
+        while queue and not end_reached:
+            current = queue.pop(0)
+
+            neighbors = self.get_neighbors(current)
+            reachable[current] = neighbors
+
+            if neighbors:
+                not_walls = []
+                for neighbor in neighbors:
+                    if neighbor.weight != self.WALL:
+                        not_walls.append(neighbor)
+                reachable[current] = set(not_walls)
+                neighbor = random.choice(list(not_walls))
+                queue.append(neighbor)
+                path[current] = queue[0]
+
+                if neighbor == end:
+                    end_reached = True
+
+        return reachable, path
 
     def bron_kerbosch(self) -> list[set[Sommet]]:
         """
@@ -300,4 +352,47 @@ class Grille:
 
         return cliques
 
-    
+    def bellman_ford(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
+        # Initialisation des distances avec l'infini (sys.maxsize)
+        distances = {sommet: sys.maxsize for ligne in self.tab for sommet in ligne}
+        predecessors = {sommet: None for ligne in self.tab for sommet in ligne}  # Dictionnaire des prédécesseurs
+        next_nodes = {sommet: set() for ligne in self.tab for sommet in ligne}  # Dictionnaire des voisins sélectionnés
+
+        distances[start] = 0
+
+        # Pour chaque sommet, on met à jour les distances en fonction des voisins
+        for _ in range(len(self.tab) * len(self.tab[0]) - 1):  # Pas besoin de vérifier après len(grille) - 1 itérations
+            for ligne in self.tab:
+                for sommet in ligne:
+                    for voisin in self.get_neighbors(sommet):
+                        # Mise à jour des distances si un chemin plus court est trouvé
+                        if distances[voisin] > distances[sommet] + voisin.weight:
+                            distances[voisin] = distances[sommet] + voisin.weight
+                            predecessors[voisin] = sommet
+                            next_nodes[sommet].add(voisin)  # Ajout du voisin choisi
+
+        # Vérification des cycles négatifs (optionnel selon le contexte)
+        for ligne in self.tab:
+            for sommet in ligne:
+                for voisin in self.get_neighbors(sommet):
+                    if distances[voisin] > distances[sommet] + voisin.weight:
+                        raise ValueError("Le graphe contient un cycle négatif")
+
+        # Construction du dictionnaire des chemins optimaux (chemin le plus rapide)
+        shortest_path_dict = {}
+        current = end
+        while current is not None and predecessors[current] is not None:
+            shortest_path_dict[current] = predecessors[current]
+            current = predecessors[current]
+
+        shortest_path_dict = {v: k for k, v in reversed(list(shortest_path_dict.items()))}
+
+        # Si le sommet 'end' est encore inatteignable, lever une exception
+        if distances[end] == sys.maxsize:
+            raise NotConnectedGraphException()
+
+        # Retourner les deux dictionnaires dans un tuple
+        return next_nodes, shortest_path_dict
+
+    def a_star(self, start: Sommet, end: Sommet):
+        queue: list[tuple[Sommet, int, Union[Sommet, None]]] = [(start, 0, start)]
