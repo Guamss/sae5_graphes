@@ -3,7 +3,6 @@ from pydantic import Field
 from flask import Flask, request, jsonify
 from pydantic import BaseModel
 from spectree import SpecTree, Response
-from models import Grille, Sommet
 from sae5_graphes import models
 
 app = Flask(__name__)
@@ -18,18 +17,23 @@ class GrilleDimensions(BaseModel):
     width: int = Field(20, title="Largeur de la grille", description="Largeur de la grille entre 2 et 1000")
 
 
-@app.route('/getGrid', methods=['GET'])
+@app.route('/getGridDimensions', methods=['GET'])
 @api.validate(tags=["Grid"])
-def get_grid():
+def get_grid_dimensions():
     """
-    Obtenir la grille entière sous forme de tableau 2D.
+    Obtenir la grille entière sous de dimensions Hauteur-Largeur.
     """
-    response = {
-        "height": grille.height,
-        "width": grille.width
-    }
-    return jsonify(response), 200
-
+    try:
+        response = {
+            "height": grille.height,
+            "width": grille.width
+        }
+        if response:
+            return jsonify(response), 200
+        else:
+            return jsonify({"error": "Les dimensions de la grille n'ont pas pu être déterminés"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/editGrid', methods=['PUT'])
 @api.validate(tags=["Grid"], json=GrilleDimensions)
@@ -48,6 +52,21 @@ def edit_grid(json: GrilleDimensions):
         global grille
         grille = models.Grille(json.height, json.width)
         return jsonify({"height": grille.height, "width": grille.width}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/getGridWeights', methods=['GET'])
+@api.validate(tags=["Grid"])
+def get_grid_weights():
+    """
+    Obtenir la grille entière sous forme de tableau 2D.
+    """
+    try:
+        grid_repr = [[sommet.weight for sommet in row] for row in grille.tab]
+        if grid_repr:
+            return jsonify(grid_repr), 200
+        else:
+            return jsonify({"error": "Le poids de la grille n'ont pas pu être déterminés"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
