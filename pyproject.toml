@@ -1,0 +1,27 @@
+[project]
+name = "sae5_graphes"
+version = "0.1.0"
+description = "Logiciel de graphes"
+authors = [
+    {name = "Florian", email = ""},
+    {name = "Alexis", email = ""},
+    {name = "Thomas", email = ""},
+    {name = "Elias", email = ""},
+    {name = "David", email = ""},
+    {name = "Sidy", email = ""},
+]
+dependencies = [
+    "flask>=3.1.0",
+    "spectree>=1.4.4",
+]
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
