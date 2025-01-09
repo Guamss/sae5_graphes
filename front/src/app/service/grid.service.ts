@@ -12,7 +12,16 @@ export class GridService {
     constructor(private http: HttpClient) {
     }
 
-    sendGridDijkstra(grid: Grid): Observable<any> {
-        return this.http.put(this.apiUrl, {"grid": grid.tab});
+    getGridDimensions(): Observable<{ height: number; width: number }> {
+        return this.http.get<{ height: number; width: number }>(`${this.apiUrl}/dimensions`);
+    }
+    sendGridDimensions(height: number, width: number): Observable<any> {
+        return this.http.put(`${this.apiUrl}/dimensions`, {"height": height, "width": width})
+    }
+    getGridWeights(): Observable<number[][]> {
+        return this.http.get<number[][]>(`${this.apiUrl}/weights`);
+    }
+    sendWeightGrid(grid: Grid): Observable<any> {
+        return this.http.put(`${this.apiUrl}/weights`, {"grid": grid.tab});
     }
 }
