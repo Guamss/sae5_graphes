@@ -1,18 +1,18 @@
 <div class="hex-grid">
   <div
-    *ngFor="let row of grid.tab; let rowIndex = index"
+    *ngFor="let col of grid.tab[0]; let colIndex = index"
     class="hex-row"
-    [style.margin-left]="rowIndex % 2 === 0 ? '0' : '60px'"
+    [style.margin-top]="colIndex % 2 === 0 ? '0' : '60px'"
   >
     <div
-      *ngFor="let hex of row; let colIndex = index"
+      *ngFor="let row of grid.tab; let rowIndex = index"
       class="hexagon"
       [ngStyle]="{
         'background-color': (rowIndex === grid.start[0] && colIndex === grid.start[1]) ? 'blueviolet' :
-                             (rowIndex === grid.end[0] && colIndex === grid.end[1]) ? 'red' : getColorForWeight(hex)
+                             (rowIndex === grid.end[0] && colIndex === grid.end[1]) ? 'red' : getColorForWeight(1)
       }"
       (click)="onHexClick(rowIndex, colIndex)">
-<!--      <span>{{ rowIndex }},{{ colIndex }}</span>-->
+      <span>{{ rowIndex }},{{ colIndex }}</span>
     </div>
   </div>
 </div>
