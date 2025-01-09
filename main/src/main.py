@@ -1,5 +1,5 @@
 from gui import App
-from models import Grille, Sommet
+from models import Grille
 
 WIDTH = 20
 HEIGHT = 20
