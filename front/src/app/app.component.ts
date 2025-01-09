@@ -6,6 +6,7 @@ import {HexagonGridComponent} from './hexagon-grid/hexagon-grid.component';
   selector: 'app-root',
   imports: [HexagonGridComponent],
   templateUrl: './app.component.html',
+  standalone: true,
   styleUrl: './app.component.css'
 })
 export class AppComponent {

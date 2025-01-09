@@ -10,6 +10,7 @@ import {Subscription} from 'rxjs';
   selector: 'app-hexagon-grid',
   imports: [CommonModule, FormsModule,],
   templateUrl: './hexagon-grid.component.html',
+  standalone: true,
   styleUrl: './hexagon-grid.component.css'
 })
 export class HexagonGridComponent implements OnDestroy {
