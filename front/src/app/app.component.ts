@@ -9,5 +9,5 @@ import {HexagonGridComponent} from './hexagon-grid/hexagon-grid.component';
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  title = 'hexagones';
+  title = 'chiffredeux';
 }
