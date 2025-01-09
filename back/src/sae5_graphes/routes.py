@@ -1,4 +1,5 @@
 from pydantic import Field
+from flask_cors import CORS
 
 from flask import Flask, request, jsonify
 from pydantic import BaseModel
@@ -6,6 +7,7 @@ from spectree import SpecTree, Response
 from sae5_graphes import models
 
 app = Flask(__name__)
+CORS(app)
 api = SpecTree('flask')
 
 # La grille de base est 20x20

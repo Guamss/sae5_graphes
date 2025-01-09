@@ -3,6 +3,7 @@ import {HexagonGridComponent} from './hexagon-grid/hexagon-grid.component';
 import {ColorButtonsComponent} from "./color-buttons/color-buttons.component";
 import {ActionButtonsComponent} from "./action-buttons/action-buttons.component";
 import {GridDimensionsComponent} from "./grid-dimensions/grid-dimensions.component";
+import {Grid} from "./model/grid";
 
 @Component({
   selector: 'app-root',
@@ -13,4 +14,11 @@ import {GridDimensionsComponent} from "./grid-dimensions/grid-dimensions.compone
 })
 export class AppComponent {
   title = 'chiffredeux';
+  currentGrid: Grid | undefined;
+
+  constructor() {}
+
+  updateGrid(newGrid: Grid): void {
+    this.currentGrid = newGrid;
+  }
 }
