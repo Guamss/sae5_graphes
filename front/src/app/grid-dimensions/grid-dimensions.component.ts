@@ -1,36 +1,53 @@
-import { Component } from '@angular/core';
+import {Component, EventEmitter, Output} from '@angular/core';
+import {GridService} from "../service/grid.service";
+import {FormsModule} from "@angular/forms";
+import {NgIf} from "@angular/common";
+import {Grid} from "../model/grid";
 
 @Component({
   selector: 'app-grid-dimensions',
-  imports: [],
+  imports: [
+    FormsModule,
+    NgIf
+  ],
   templateUrl: './grid-dimensions.component.html',
   standalone: true,
   styleUrl: './grid-dimensions.component.css'
 })
 export class GridDimensionsComponent {
-  width: number = 2;
-  height: number = 5;
-  // grid: Grid;
+  width: number = 0;
+  height: number = 0;
+  message: string = '';
 
-  // updateGrid(width, height) {
-  //   console.log(width, height);
-  // }
-  // TODO : update quand le formulaire fonctionnera avec les NG models, Exemple de quoi il ressemble atm :
-  //<div>
-  //   <label for="rows">Nombre de lignes :</label>
-  //   <input id="rows" type="number" [(ngModel)]="grid.width" min="2" max="1000"/>
-  //
-  //   <label for="cols">Nombre de colonnes :</label>
-  //   <input id="cols" type="number" [(ngModel)]="grid.height" min="2" max="1000"/>
-  //
-  //   <button (click)="updateGrid(grid.width, grid.height)">Générer la grille</button>
-  // </div>
+ @Output() gridUpdated = new EventEmitter<Grid>();
 
-  sendData() {
-    console.log("jenvoie")
+  constructor(private gridService: GridService) {}
+
+
+  ngOnInit(): void {
+    this.gridService.getGridDimensions().subscribe({
+      next: (dimensions) => {
+        this.height = dimensions.height;
+        this.width = dimensions.width;
+      },
+      error: () => {
+        this.message = 'Erreur lors de la récupération des dimensions de la grille.';
+      }
+    });
   }
 
-  updateGrid(width: number, height: number) {
-    console.log(width,height)
+  // Méthode pour envoyer les nouvelles dimensions à l'API
+  sendGrid(): void {
+    this.gridService.sendGridDimensions(this.height, this.width).subscribe({
+      next: () => {
+        this.message = 'Dimensions de la grille envoyées avec succès !';
+        // Créer une nouvelle grille avec les dimensions mises à jour
+        const updatedGrid: Grid = { width: this.width, height: this.height, start: [0, this.width-1], end: [this.height - 1, 0], tab: [] };
+        this.gridUpdated.emit(updatedGrid);  // Émettre l'événement avec la nouvelle grille
+      },
+      error: () => {
+        this.message = 'Erreur lors de l\'envoi des dimensions.';
+      }
+    });
   }
 }

@@ -1,5 +1,6 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { NgForOf } from '@angular/common';
+import { Grid } from "../model/grid";
 
 @Component({
   selector: 'app-hexagon-grid',
@@ -10,9 +11,8 @@ import { NgForOf } from '@angular/common';
   ],
   styleUrls: ['./hexagon-grid.component.css']
 })
-export class HexagonGridComponent implements OnInit {
-  @Input() width: number = 10; // Add @Input to accept longueur
-  @Input() height: number = 10; // Add @Input to accept largeur
+export class HexagonGridComponent implements OnInit, OnChanges {
+  @Input() grid: Grid | undefined;
 
   calculatedPositions: { x: number, y: number }[] = [];
 
@@ -22,7 +22,16 @@ export class HexagonGridComponent implements OnInit {
     this.calculatePositions();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['grid'] && this.grid) {
+      this.calculatePositions();  // Recalculer les positions si grid change
+    }
+  }
+
   calculatePositions(): void {
+    const width = this.grid?.width || 0;
+    const height = this.grid?.height || 0;
+
     const startX = 35; // Coordonnée de départ X
     const startY = 41; // Coordonnée de départ Y
     const spacingX = 15; // Espacement entre les "pods"
@@ -31,9 +40,9 @@ export class HexagonGridComponent implements OnInit {
     this.calculatedPositions = [];
 
     // Parcours de la largeur (hauteur du grid)
-    for (let j = 0; j < this.height; j++) {
+    for (let j = 0; j < height; j++) {
       // Parcours de la longueur (largeur du grid)
-      for (let i = 0; i < this.width; i++) {
+      for (let i = 0; i < width; i++) {
         const x = startX + i * spacingX; // Déplacement en X
         const y = startY + (j * spacingY) + (i % 2 === 0 ? 0 : spacingY / 2); // Ajustement en Y pour créer l'effet décalé
 

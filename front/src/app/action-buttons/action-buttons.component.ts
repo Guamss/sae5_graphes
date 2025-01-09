@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, Input, Output, EventEmitter} from '@angular/core';
 import {Grid} from "../model/grid";
 import {GridService} from "../service/grid.service";
 
@@ -7,10 +7,11 @@ import {GridService} from "../service/grid.service";
     imports: [],
     templateUrl: './action-buttons.component.html',
     standalone: true,
-    styleUrl: './action-buttons.component.css'
+    styleUrls: ['./action-buttons.component.css'] // Correction ici
 })
 export class ActionButtonsComponent {
     @Input() grid: Grid | undefined
+    @Output() gridChange = new EventEmitter<Grid>();
 
     constructor(private gridService: GridService) {
     }
@@ -31,7 +32,7 @@ export class ActionButtonsComponent {
     sendGridData() {
         if (this.grid) {
             console.log(this.grid)
-            this.gridService.sendGridDijkstra(this.grid).subscribe({
+            this.gridService.sendWeightGrid(this.grid).subscribe({
                 error: err => console.error(err.message)
             });
         } else {

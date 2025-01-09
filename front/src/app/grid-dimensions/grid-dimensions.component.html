@@ -1,10 +1,13 @@
 <div>
   <label for="rows">Nombre de lignes :</label>
-<!--    TODO : remettre les ngModels ducoup -->
-  <input id="rows" type="number" min="2" max="1000"/>
+  <input id="rows" type="number" min="2" max="1000" [(ngModel)]="height" />
 
   <label for="cols">Nombre de colonnes :</label>
-  <input id="cols" type="number" min="2" max="1000"/>
+  <input id="cols" type="number" min="2" max="1000" [(ngModel)]="width" />
 
-  <button (click)="updateGrid(10,10)">Générer la grille</button>
+  <button (click)="sendGrid()">Générer la grille</button>
+</div>
+
+<div *ngIf="message" class="message">
+  {{ message }}
 </div>

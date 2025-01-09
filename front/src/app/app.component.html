@@ -1,5 +1,5 @@
 <h1>{{ title }}</h1>
-<app-action-buttons [grid]="currentGrid"></app-action-buttons>
+<app-action-buttons [grid]="currentGrid" (gridChange)="updateGrid($event)"></app-action-buttons>
 <app-color-buttons></app-color-buttons>
-<app-hexagon-grid [width]="5" [height]="15"></app-hexagon-grid>
-<app-grid-dimensions></app-grid-dimensions>
+<app-hexagon-grid [grid]="currentGrid"></app-hexagon-grid>
+<app-grid-dimensions (gridUpdated)="updateGrid($event)"></app-grid-dimensions>
