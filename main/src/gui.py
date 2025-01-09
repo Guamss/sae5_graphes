@@ -1,12 +1,12 @@
-from tkinter import *
-from math import cos, sin, sqrt, radians
 import random
+from math import cos, sin, sqrt, radians
+from tkinter import messagebox, Canvas, Tk, DoubleVar, Menu, Frame, Scale, HORIZONTAL, Label, Button, LAST
 
 from exceptions import NotConnectedGraphException
 from models import Grille, Sommet
 
 BLACK = "black"
-WHITE = "#EEEEEE"
+WHITE = "#E0E0E0"
 BLUE = "#00BCD4"
 GREEN = "#9CCC65"
 YELLOW = "#FBC02D"
@@ -48,10 +48,10 @@ class ColorHexagon:
 
 
 class App(Tk):
-    def __init__(self, num_cols, num_rows, window_width, window_height):
+    def __init__(self, num_cols, num_rows, window_height, window_width):
         super().__init__()
         self.title("Hexagones")
-        self.geometry(f"{window_width}x{window_height}")
+        self.geometry(f"{window_height}x{window_width}")
 
         # Définir la taille initiale de la grille
         self.hex_size = 20
@@ -75,13 +75,17 @@ class App(Tk):
         self.selected_color = BLACK  # Couleur sélectionnée par défaut pour dessiner
 
         # Liaisons des événements
-
+        self.bind("<Configure>", self.on_resize)
+        self.resize_id = None
         self.canvas.bind("<Button-1>", self.click)  # Clic simple
         self.canvas.bind("<B1-Motion>", self.drag)  # Dragging avec le clic gauche
 
+        self.is_stopped_button_pressed = False
+        self.sum_weight = 0
+
         self.grille = Grille(num_cols, num_rows)
-        self.start = self.grille.tab[0][self.num_rows - 1]
-        self.end = self.grille.tab[self.num_cols - 1][0]
+        self.start = self.grille.tab[0][self.num_cols - 1]
+        self.end = self.grille.tab[self.num_rows - 1][0]
 
         self.speed = DoubleVar()
 
@@ -111,35 +115,47 @@ class App(Tk):
         menu_bar.add_cascade(label="Effacer", menu=clear_menu)
 
         menu_bar.add_command(label="Répartir les poids aléatoirement", command=self.random_colors)
+        menu_bar.add_command(label="Afficher la distance parcourue", command=self.weight_popup)
 
         self.config(menu=menu_bar)
 
-        frame_vitesse_slider = Frame(self)
-        frame_vitesse_slider.grid(row=0, column=10, rowspan=5, padx=20, pady=10,
+        frame_config_algo_exec = Frame(self)
+        frame_config_algo_exec.grid(row=0, column=10, rowspan=5, padx=20, pady=10,
                                   sticky="ne")
 
-        Scale(frame_vitesse_slider, variable=self.speed, from_=1, to=1000, orient=HORIZONTAL).pack(side="top", pady=5)
-        Label(frame_vitesse_slider, text="Vitesse d'exécution (en ms)").pack(side="top", pady=5)
+        Button(frame_config_algo_exec, text="Stopper l'exécution", command=self.stop_algo_exec).pack(side="bottom", padx=5, pady=5)
+
+        Scale(frame_config_algo_exec, variable=self.speed, from_=1, to=1000, orient=HORIZONTAL).pack(side="top", pady=5)
+        Label(frame_config_algo_exec, text="Vitesse d'exécution (en ms)").pack(side="top", pady=5)
 
         # Boutons couleurs
-        Button(self, text="Noir", bg=BLACK, fg=WHITE, command=lambda: self.set_color(BLACK)).grid(row=1, column=0,
-                                                                                                  padx=5, pady=5,
-                                                                                                  sticky="news")
-        Button(self, text="Blanc", bg=WHITE, fg=BLACK, command=lambda: self.set_color(WHITE)).grid(row=2, column=0,
-                                                                                                   padx=5, pady=5,
-                                                                                                   sticky="news")
-        Button(self, text="Bleu", bg=BLUE, fg=WHITE, command=lambda: self.set_color(BLUE)).grid(row=3, column=0, padx=5,
-                                                                                                pady=5, sticky="news")
-        Button(self, text="Vert", bg=GREEN, fg=WHITE, command=lambda: self.set_color(GREEN)).grid(row=4, column=0,
-                                                                                                  padx=5, pady=5,
-                                                                                                  sticky="news")
-        Button(self, text="Jaune", bg=YELLOW, fg=BLACK, command=lambda: self.set_color(YELLOW)).grid(row=5, column=0,
-                                                                                                     padx=5, pady=5,
-                                                                                                     sticky="news")
-        Button(self, text="Départ", bg=PURPLE, fg=WHITE, command=lambda: self.set_color(PURPLE)).grid(row=6, column=0,
+        Button(self, text="Mur", bg=BLACK, fg=WHITE, command=lambda: self.set_color(BLACK)).grid(row=1, column=0,
+                                                                                                 padx=5, pady=5,
+                                                                                                 sticky="news")
+        Button(self, text="Blanc (poids = 1)", bg=WHITE, fg=BLACK, command=lambda: self.set_color(WHITE)).grid(row=2,
+                                                                                                               column=0,
+                                                                                                               padx=5,
+                                                                                                               pady=5,
+                                                                                                               sticky="news")
+        Button(self, text="Bleu (poids = 3)", bg=BLUE, fg=BLACK, command=lambda: self.set_color(BLUE)).grid(row=3,
+                                                                                                            column=0,
+                                                                                                            padx=5,
+                                                                                                            pady=5,
+                                                                                                            sticky="news")
+        Button(self, text="Vert (poids = 5)", bg=GREEN, fg=BLACK, command=lambda: self.set_color(GREEN)).grid(row=4,
+                                                                                                              column=0,
+                                                                                                              padx=5,
+                                                                                                              pady=5,
+                                                                                                              sticky="news")
+        Button(self, text="Jaune (poids = 10)", bg=YELLOW, fg=BLACK, command=lambda: self.set_color(YELLOW)).grid(row=5,
+                                                                                                                  column=0,
+                                                                                                                  padx=5,
+                                                                                                                  pady=5,
+                                                                                                                  sticky="news")
+        Button(self, text="Départ", bg=PURPLE, fg=BLACK, command=lambda: self.set_color(PURPLE)).grid(row=6, column=0,
                                                                                                       padx=5, pady=5,
                                                                                                       sticky="news")
-        Button(self, text="Objectif", bg=RED, fg=WHITE, command=lambda: self.set_color(RED)).grid(row=7, column=0,
+        Button(self, text="Objectif", bg=RED, fg=BLACK, command=lambda: self.set_color(RED)).grid(row=7, column=0,
                                                                                                   padx=5, pady=5,
                                                                                                   sticky="news")
 
@@ -152,8 +168,8 @@ class App(Tk):
             for r in range(rows):
                 id = f"{c}-{r}"
                 h = ColorHexagon(self.canvas,
-                                 c * self.hex_width + self.hex_width / 2,
-                                 r * self.hex_height + self.hex_height / 4 + offset,
+                                 c * self.hex_width + self.hex_width,
+                                 r * self.hex_height + self.hex_height / 2 + offset,
                                  size,
                                  WHITE,
                                  id)
@@ -162,6 +178,9 @@ class App(Tk):
 
     def set_color(self, color):
         self.selected_color = color
+
+    def stop_algo_exec(self):
+        self.is_stopped_button_pressed = True
 
     def click(self, evt):
         """
@@ -180,8 +199,8 @@ class App(Tk):
         Calcule le centre d'un hexagone en fonction de ses coordonnées (colonne, ligne).
         """
         offset = self.hex_size * sqrt(3) / 2 if y % 2 else 0
-        center_x = y * self.hex_width + self.hex_width * 0.8
-        center_y = (x * self.hex_height + self.hex_height / 4 + offset) + self.hex_height / 2
+        center_x = y * self.hex_width + self.hex_width + self.hex_height / 3
+        center_y = (x * self.hex_height + self.hex_height / 2 + offset) + self.hex_height / 2
         return center_x, center_y
 
     def paint_path(self, start, end, color):
@@ -196,31 +215,52 @@ class App(Tk):
             fill=color, width=5, arrow=LAST
         ))
 
-    def paint_hexagon(self, x: int, y: int, color: str):
-        hexagon = self.hexagons.get(f"{x}-{y}")
+    def paint_hexagon(self, col: int, row: int, color: str):
+        hexagon = self.hexagons.get(f"{col}-{row}")
 
         if color in [PURPLE, RED]:  # Départ ou arrivée
             self.unique_color_replace()
-            self.grille.tab[x][y].weight = 1
+            self.grille.tab[row][col].weight = 1
 
         if hexagon:
             hexagon.color = color
             if color == BLACK:
-                self.grille.tab[y][x].weight = self.grille.WALL
+                self.grille.tab[row][col].weight = self.grille.WALL
             elif color == WHITE:
-                self.grille.tab[y][x].weight = 1
+                self.grille.tab[row][col].weight = 1
             elif color == RED:
-                self.end = self.grille.tab[y][x]
+                self.end = self.grille.tab[row][col]
             elif color == PURPLE:
-                self.start = self.grille.tab[y][x]
+                self.start = self.grille.tab[row][col]
             elif color == BLUE:
-                self.grille.tab[y][x].weight = 3
+                self.grille.tab[row][col].weight = 3
             elif color == GREEN:
-                self.grille.tab[y][x].weight = 5
+                self.grille.tab[row][col].weight = 5
             else:
-                self.grille.tab[y][x].weight = 10
+                self.grille.tab[row][col].weight = 10
 
         self.canvas.itemconfigure(hexagon.id, fill=color)
+
+    def on_resize(self, event):
+        if self.resize_id is not None:
+            self.after_cancel(self.resize_id)
+
+        self.resize_id = self.after(100, self.on_resize_released)
+
+    def on_resize_released(self):
+        height = self.winfo_height()
+        width = self.winfo_width()
+
+        self.hex_size = min(
+            (width * (0.6 * 0.75) / (self.num_cols // 2 + ((self.num_cols // 2) + self.num_cols % 2) * 1.5)),
+            (height * (0.8 * 0.9) / (self.num_rows * sqrt(3))))  # TODO : trouver relation de hex_size
+        self.hex_width = self.hex_size * 1.5
+        self.hex_height = self.hex_size * sqrt(3)
+        self.canvas.config(width=width * 0.6, height=height * 0.8)
+
+        self.canvas.delete("all")
+
+        self.init_grid(self.num_cols, self.num_rows, self.hex_size)
 
     def paint_hexagon_on_click(self, x, y):
         """
@@ -234,11 +274,11 @@ class App(Tk):
                 hexagon = self.hexagons.get(hex_id)  # Récupère l'hexagone correspondant
                 if hexagon:
 
-                    row, col = map(int, hex_id.split("-"))
+                    col, row = map(int, hex_id.split("-"))
 
                     if not self.is_sommet_start_or_end(self.grille.tab[row][col]):
                         color = self.selected_color
-                        self.paint_hexagon(row, col, color)
+                        self.paint_hexagon(col, row, color)
 
     def unique_color_replace(self):
         for hexagon in self.hexagons.values():
@@ -247,6 +287,7 @@ class App(Tk):
                 self.canvas.itemconfigure(hexagon.id, fill=WHITE)
 
     def clear_arrows(self):
+        self.sum_weight = 0
         for arrow in self.paths:
             self.canvas.delete(arrow)
         self.paths = []
@@ -272,6 +313,12 @@ class App(Tk):
     def is_sommet_start_or_end(self, sommet: Sommet):
         return (self.start.x == sommet.x and self.start.y == sommet.y) or (
                 self.end.x == sommet.x and self.end.y == sommet.y)
+
+    def weight_popup(self):
+        if self.sum_weight > 0:
+            messagebox.showinfo("Distance parourue", f"La distance parcourue par le chemin rouge : {self.sum_weight}")
+        else:
+            messagebox.showwarning("Aucun parcours detecté", "Il faut exécuter un algorithme afin d'avoir une distance")
 
     def random_colors(self):
         """
@@ -303,49 +350,57 @@ class App(Tk):
         pass
 
     def launch_parcours_en_largeur(self):
+        self.is_stopped_button_pressed = False
         self.clear_arrows()
         self.grille.init_grid()
         try:
             chemins = self.grille.parcours_largeur(self.start, self.end)
             self._display_results(chemins, self.start)
         except NotConnectedGraphException as e:
-            print(e.message)
+            self.alert_popup(e.message)
 
     def launch_parcours_en_profondeur(self):
+        self.is_stopped_button_pressed = False
         self.clear_arrows()
         self.grille.init_grid()
         try:
             chemins = self.grille.parcours_profondeur(self.start, self.end)
             self._display_results(chemins, self.start)
         except NotConnectedGraphException as e:
-            print(e.message)
+            self.alert_popup(e.message)
 
     def launch_allerAToire(self):
+        self.is_stopped_button_pressed = False
         self.clear_arrows()
         self.grille.init_grid()
         try:
             chemins = self.grille.allerAToire(self.start, self.end)
             self._display_results(chemins, self.start)
         except NotConnectedGraphException as e:
-            print(e.message)
+            self.alert_popup(e.message)
 
     def launch_dijkstra(self):
+        self.is_stopped_button_pressed = False
         self.clear_arrows()
         self.grille.init_grid()
         try:
             chemins = self.grille.parcours_dijkstra(self.start, self.end)
             self._display_results(chemins, self.start)
         except NotConnectedGraphException as e:
-            print(e.message)
+            self.alert_popup(e.message)
 
     def launch_bellman_ford(self):
+        self.is_stopped_button_pressed = False
         self.clear_arrows()
         self.grille.init_grid()
         try:
             chemins = self.grille.bellman_ford(self.start, self.end)
             self._display_results(chemins, self.start)
         except NotConnectedGraphException as e:
-            print(e.message)
+            self.alert_popup(e.message)
+
+    def alert_popup(self, text):
+        messagebox.showerror("Erreur d'exécution", text)
 
     def _display_results(self, chemins, start):
         disp_queue = []
@@ -355,7 +410,7 @@ class App(Tk):
         self._progressive_display_all(disp_queue, chemins, start)
 
     def _progressive_display_all(self, chemin: list[tuple], chemins, start):
-        if len(chemin) > 0:
+        if len(chemin) > 0 and not self.is_stopped_button_pressed:
             sommet, suivant = chemin.pop(0)
             self.paint_path(sommet, suivant, "#757575")
             self.after(int(self.speed.get()), self._progressive_display_all, chemin, chemins, start)
@@ -363,7 +418,8 @@ class App(Tk):
             self._progressive_display_best(chemins[1], start)
 
     def _progressive_display_best(self, chemin, sommet):
-        if sommet in chemin.keys():
+        if sommet in chemin.keys() and not self.is_stopped_button_pressed:
+            self.sum_weight += sommet.weight
             suivant = chemin[sommet]
             self.paint_path(sommet, suivant, RED)
             self.after(int(self.speed.get()), self._progressive_display_best, chemin, suivant)

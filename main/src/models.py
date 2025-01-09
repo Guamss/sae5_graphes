@@ -58,7 +58,7 @@ class Grille:
         self.width: int = width
         self.WALL: int = sys.maxsize # on prend un entier très grand pour définir ce qu'est un mur
         self.tab: list[list[Sommet]] = \
-            [[Sommet(1, x, y) for y in range(width)] for x in range(height)]
+            [[Sommet(1, x, y) for y in range(height)] for x in range(width)]
 
     def __str__(self) -> str:
         out: str = ""
@@ -84,7 +84,7 @@ class Grille:
         neighbors: set[Sommet] = set()
         for i in range(s.x - 1, s.x + 2):
             for j in range(s.y - 1, s.y + 2):
-                if 0 <= i < self.height and 0 <= j < self.width and (i != s.x or j != s.y):  # in Grille && !current
+                if 0 <= i < self.width and 0 <= j < self.height and (i != s.x or j != s.y):  # in Grille && !current
                     if i != s.x and j != s.y:  # Une case angle
                         if s.y % 2:  # Colone
                             if i == s.x + 1:
@@ -97,8 +97,17 @@ class Grille:
 
         return neighbors
 
-    def is_connexe(self):
-        start = self.tab[0][0]
+    def get_nbr_wall(self) -> int:
+        """
+        Calcule le nombre de
+        :return: le nombre total de mur dans la grille
+        """
+        nbr_wall: int = 0
+        for ligne in self.tab:  # Parcourt chaque ligne (liste de sommets)
+            for sommet in ligne:  # Parcourt chaque sommet de la ligne
+                if sommet.weight == self.WALL:
+                    nbr_wall+=1
+        return nbr_wall
 
     def parcours_profondeur(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         """
@@ -111,50 +120,37 @@ class Grille:
         """
         # Parcours en profondeur
         visited = {}
+        self.parcours_profondeur_recursive(start, end, visited)
+
+        # Le cas où le graphe n'est pas connexe
+        print(len(visited))
+        if len(visited) != (self.height * self.width) - self.get_nbr_wall():
+            raise NotConnectedGraphException()
+
+        # Solution
         solution: dict[Sommet, Sommet] = {}
-        self.parcours_profondeur_recursive(start, visited,solution,end)
+        courant = end
+        antecedent = None
+
+        while courant != start:
+            for sommet in visited:
+                if courant in visited[sommet]:
+                    antecedent = courant
+                    courant = sommet
+            solution[courant] = antecedent
         return visited, solution
 
-    def parcours_profondeur_recursive(self, s: Sommet, visited: dict[Sommet, set[Sommet]],
-                                      solution: dict[Sommet, Sommet], end: Sommet):
+    def parcours_profondeur_recursive(self, s: Sommet, end: Sommet, visited: dict[Sommet, set[Sommet]], ):
         s.visited = True
-        visited[s] = self.get_neighbors(s)
-        if s == end:
-            return True
+        if s not in visited:
+            visited[s] = set()
 
         for neighbor in self.get_neighbors(s):
             if not neighbor.visited and neighbor.weight != self.WALL:
-                solution[s] = neighbor
-                if self.parcours_profondeur_recursive(neighbor, visited, solution, end):
+                visited[s].add(neighbor)
+                if self.parcours_profondeur_recursive(neighbor, end, visited):
                     return True
         return False
-
-    def parcours_naif(self, start: Sommet, end: Sommet) -> dict[Sommet, list[Sommet]]:
-        """
-        Le parcours naif va se contenter de parcourir la grille en prenant ses voisins avec le poid le moins lourd
-
-        Args:
-            start (Sommet): le sommet de départ
-            end: (Sommet): le sommet de fin
-        """
-        # TODO : a faire en recurcif pour remonter quand ça tourne en rond
-        visited = []
-        end_reached = False
-        actual_sommet = start
-        while not end_reached:
-            visited.visited = True
-            visited.append(actual_sommet)
-            if actual_sommet == end:
-                end_reached = True
-
-            actual_sommet_neighbors = self.get_neighbors(actual_sommet)
-            min_weight_neighbor: Sommet = Sommet(9999, 0, 0)  # un sommet quelconque
-            for neighbor in actual_sommet_neighbors:
-                if neighbor.weight < min_weight_neighbor.weight and not neighbor.visited:
-                    min_weight_neighbor = neighbor
-            actual_sommet = min_weight_neighbor
-
-        return {start: visited}
 
     def parcours_dijkstra(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         queue: list[tuple[Sommet, int, Union[Sommet, None]]] = [(start, 0, start)]
@@ -165,7 +161,6 @@ class Grille:
             visited.append(current)
             current[0].visited = True
             for neighbor in self.get_neighbors(current[0]):
-
                 # --- Zone parallèlisable (on verra si c'est nécessaire)
 
                 if not neighbor.visited and neighbor.weight != self.WALL:
@@ -270,9 +265,6 @@ class Grille:
 
         return dico_all_result, dico_result # ca pue du cul
 
-    import random
-
-    import random
 
     def allerAToire(self, start: Sommet, end: Sommet) -> tuple[
         dict[Sommet, set[Sommet]], dict[tuple[int, int], tuple[int, int]]]:
@@ -406,5 +398,25 @@ class Grille:
         # Retourner les deux dictionnaires dans un tuple
         return ordered_next_nodes, shortest_path_dict
 
+    def heuristique_manhattan(end : Sommet, sommet : Sommet) -> dict[Sommet:int]:
+        distance = abs(sommet.x - end.x) + abs(sommet.y - end.y)
+        return distance
+
     def a_star(self, start: Sommet, end: Sommet):
-        queue: list[tuple[Sommet, int, Union[Sommet, None]]] = [(start, 0, start)]
+        file_attente: list[Sommet] = [start] #File doit être trié avec l'heuristique
+        predecesseur: dict[Sommet: Sommet] = {start: None}
+        cout_acces = {start: 0}
+
+        courant = file_attente.pop(0)
+        while courant != end:
+            courant.visited = True
+            courant_voisin = self.get_neighbors(courant)
+            for voisin in courant_voisin:
+                if voisin
+                    file_attente.append(voisin)
+                    predecesseur[voisin] = courant
+                    cout_acces[voisin] = cout_acces[courant] + 1
+
+            courant = file_attente.pop(0)
+
+
