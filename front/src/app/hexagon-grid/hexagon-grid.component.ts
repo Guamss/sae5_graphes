@@ -1,8 +1,8 @@
 import {Component} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {Grille} from '../model/grille';
-import {GrilleService} from '../service/grille.service';
+import {Grid} from '../model/grid';
+import {GridService} from '../service/grid.service';
 import {OnDestroy} from '@angular/core';
 import {Subscription} from 'rxjs';
 
@@ -22,7 +22,7 @@ export class HexagonGridComponent implements OnDestroy {
     "yellow": 30,
     "black": 40
   };
-  grid: Grille = {
+  grid: Grid = {
     height: 5,
     width: 5,
     start: [0, 0],
@@ -34,7 +34,7 @@ export class HexagonGridComponent implements OnDestroy {
   isSettingEnd: boolean = false;
   subs: Subscription[] = [];
 
-  constructor(private grilleService: GrilleService) {
+  constructor(private grilleService: GridService) {
     this.generateGrid();
   }
 
@@ -44,9 +44,6 @@ export class HexagonGridComponent implements OnDestroy {
     );
   }
 
-  changeColor(color: string): void {
-    this.selectedColor = color;
-  }
 
   getColorForWeight(weight: number): string {
     switch (weight) {

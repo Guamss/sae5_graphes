@@ -1,31 +1,3 @@
-<div>
-  <label for="rows">Nombre de lignes :</label>
-  <input id="rows" type="number" [(ngModel)]="grid.width" min="1"/>
-
-  <label for="cols">Nombre de colonnes :</label>
-  <input id="cols" type="number" [(ngModel)]="grid.height" min="1"/>
-
-  <button (click)="updateGrid(grid.width, grid.height)">Générer la grille</button>
-</div>
-
-<div>
-  <button (click)="changeColor('white')">Blanc</button>
-  <button (click)="changeColor('green')">Vert</button>
-  <button (click)="changeColor('aqua')">Bleu</button>
-  <button (click)="changeColor('yellow')">Jaune</button>
-  <button (click)="changeColor('black')">Noir</button>
-</div>
-
-<div>
-  <button (click)="generateGrid()">Tout effacer</button>
-  <button (click)="setStartMode()">Définir Départ</button>
-  <button (click)="setEndMode()">Définir Arrivée</button>
-</div>
-
-<div>
-  <button (click)="sendData()"></button>
-</div>
-
 <div class="hex-grid">
   <div
     *ngFor="let row of grid.tab; let rowIndex = index"

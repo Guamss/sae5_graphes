@@ -1,4 +1,4 @@
-export interface Grille {
+export interface Grid {
   height: number
   width: number
   start: number[]
