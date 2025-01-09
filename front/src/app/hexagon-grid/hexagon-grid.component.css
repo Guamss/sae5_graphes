@@ -49,3 +49,10 @@ a {
 a:hover {
   color: #333;
 }
+.hexagon-start {
+  fill: magenta;
+}
+
+.hexagon-end {
+  fill: red;
+}

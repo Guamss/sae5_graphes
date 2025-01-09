@@ -6,8 +6,10 @@
   </defs>
 
   <g class="pod-wrap">
-    <ng-container *ngFor="let pos of calculatedPositions">
-      <use xlink:href="#pod" [attr.transform]="'translate(' + pos.x + ', ' + pos.y + ')'"></use>
+    <ng-container *ngFor="let pos of calculatedPositions; let i = index">
+      <use xlink:href="#pod"
+           [attr.transform]="'translate(' + pos.x + ', ' + pos.y + ')'"
+           [ngClass]="{'hexagon-start': isStart(i), 'hexagon-end': isEnd(i)}"></use>
     </ng-container>
   </g>
 </svg>

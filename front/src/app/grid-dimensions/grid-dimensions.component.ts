@@ -42,7 +42,13 @@ export class GridDimensionsComponent {
       next: () => {
         this.message = 'Dimensions de la grille envoyées avec succès !';
         // Créer une nouvelle grille avec les dimensions mises à jour
-        const updatedGrid: Grid = { width: this.width, height: this.height, start: [0, this.width-1], end: [this.height - 1, 0], tab: [] };
+        const updatedGrid: Grid = {
+          width: this.width,
+          height: this.height,
+          start: [0, this.height - 1], // Ajuster les coordonnées de départ
+          end: [this.width - 1, 0], // Ajuster les coordonnées d'arrivée
+          tab: []
+        };
         this.gridUpdated.emit(updatedGrid);  // Émettre l'événement avec la nouvelle grille
       },
       error: () => {

@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { NgForOf } from '@angular/common';
+import { NgForOf, NgClass } from '@angular/common';
 import { Grid } from "../model/grid";
 
 @Component({
@@ -7,7 +7,8 @@ import { Grid } from "../model/grid";
   templateUrl: './hexagon-grid.component.html',
   standalone: true,
   imports: [
-    NgForOf
+    NgForOf,
+    NgClass
   ],
   styleUrls: ['./hexagon-grid.component.css']
 })
@@ -49,5 +50,19 @@ export class HexagonGridComponent implements OnInit, OnChanges {
         this.calculatedPositions.push({ x, y });
       }
     }
+  }
+
+  isStart(index: number): boolean {
+    if (!this.grid) return false;
+    const [startX, startY] = this.grid.start;
+    const width = this.grid.width;
+    return index === startY * width + startX;
+  }
+
+  isEnd(index: number): boolean {
+    if (!this.grid) return false;
+    const [endX, endY] = this.grid.end;
+    const width = this.grid.width;
+    return index === endY * width + endX;
   }
 }
