@@ -124,7 +124,7 @@ class Grille:
 
         # Le cas où le graphe n'est pas connexe
         print(len(visited))
-        if len(visited) != (self.height * self.width) - self.get_nbr_wall():
+        if len(visited) != (self.height * self.width) - self.get_nbr_wall() and end not in visited:
             raise NotConnectedGraphException()
 
         # Solution
@@ -265,7 +265,6 @@ class Grille:
 
         return dico_all_result, dico_result # ca pue du cul
 
-
     def allerAToire(self, start: Sommet, end: Sommet) -> tuple[
         dict[Sommet, set[Sommet]], dict[tuple[int, int], tuple[int, int]]]:
         """
@@ -289,17 +288,20 @@ class Grille:
             current = queue.pop(0)
 
             neighbors = self.get_neighbors(current)
-            reachable[current] = neighbors
 
             if neighbors:
                 not_walls = [neighbor for neighbor in neighbors if neighbor.weight != self.WALL]
-                reachable[current] = set(not_walls)
                 if not_walls:
                     neighbor = random.choice(not_walls)
                     queue.append(neighbor)
-                    path[(current.x, current.y)] = (neighbor.x, neighbor.y)
+                    if current in reachable.keys():
+                        reachable[current].add(neighbor)
+                    else:
+                        reachable[current] = {neighbor}
+                    path[current] = neighbor
 
-                    if neighbor == end:
+                    if neighbor.x == end.x and neighbor.y == end.y:
+                        print("je passe par la youhou")
                         end_reached = True
                 else:
                     # Si tous les voisins sont des murs, afficher un message

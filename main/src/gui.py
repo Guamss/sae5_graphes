@@ -67,10 +67,6 @@ class App(Tk):
                              bg=BLACK)
         self.canvas.grid(row=1, column=1, columnspan=8, rowspan=7)
 
-        # Création de la grille d'hexagones
-        self.hexagons = {}
-        self.init_grid(self.num_cols, self.num_rows, self.hex_size)
-
         self.selected_color = BLACK  # Couleur sélectionnée par défaut pour dessiner
 
         # Liaisons des événements
@@ -89,8 +85,13 @@ class App(Tk):
         self.speed = DoubleVar()
 
         self.paths = []
+        self.chemins = None
 
         self.create_elements()
+
+        # Création de la grille d'hexagones
+        self.hexagons = {}
+        self.init_grid(self.num_cols, self.num_rows, self.hex_size)
 
     def create_elements(self):
         """
@@ -120,7 +121,7 @@ class App(Tk):
 
         frame_config_algo_exec = Frame(self)
         frame_config_algo_exec.grid(row=0, column=10, rowspan=5, padx=20, pady=10,
-                                  sticky="ne")
+                                    sticky="ne")
 
         Button(frame_config_algo_exec, text="Stopper l'exécution", command=self.stop_algo_exec).pack(side="bottom", padx=5, pady=5)
 
@@ -162,6 +163,8 @@ class App(Tk):
         """
         Initialise une grille 2D d'hexagones, un départ et un objectif
         """
+        old_selected = self.selected_color
+        self.selected_color = None
         for c in range(cols):
             offset = size * sqrt(3) / 2 if c % 2 else 0
             for r in range(rows):
@@ -173,7 +176,22 @@ class App(Tk):
                                  WHITE,
                                  id)
                 self.hexagons[id] = h
+                if self.start == self.grille.tab[r][c]:
+                    self.paint_hexagon(c, r, PURPLE)
+                elif self.end == self.grille.tab[r][c]:
+                    self.paint_hexagon(c, r, RED)
+                else:
+                    colors = {
+                        1: WHITE,
+                        3: BLUE,
+                        5: GREEN,
+                        10: YELLOW,
+                        self.grille.WALL: BLACK
+                    }
+                    self.paint_hexagon(c, r, colors[self.grille.tab[r][c].weight])
+
         self.init_hexagones()
+        self.selected_color = old_selected
 
     def set_color(self, color):
         self.selected_color = color
@@ -251,7 +269,7 @@ class App(Tk):
         width = self.winfo_width()
 
         self.hex_size = min((width * 0.6 / ((self.num_cols+1) * 1.5)),
-                            (height * 0.95 / ((self.num_rows+1) * sqrt(3))))
+                            (height * 0.9 / ((self.num_rows+1) * sqrt(3))))
         self.hex_width = self.hex_size * 1.5
         self.hex_height = self.hex_size * sqrt(3)
         self.canvas.config(width=(self.num_cols+2)*self.hex_width, height=(self.num_rows+2)*self.hex_height)
@@ -259,6 +277,8 @@ class App(Tk):
         self.canvas.delete("all")
 
         self.init_grid(self.num_cols, self.num_rows, self.hex_size)
+        if self.chemins:
+            self._display_results(self.chemins[:], self.start)
 
     def paint_hexagon_on_click(self, x, y):
         """
@@ -289,6 +309,7 @@ class App(Tk):
         for arrow in self.paths:
             self.canvas.delete(arrow)
         self.paths = []
+        self.chemins = None
 
     def clear_all(self):
         """
@@ -301,6 +322,7 @@ class App(Tk):
                 hexagon.color = WHITE
                 self.canvas.itemconfigure(hexagon.id, fill=WHITE)
         self.clear_arrows()
+        self.chemins = None
 
     def clear_results(self):
         """
@@ -401,6 +423,7 @@ class App(Tk):
         messagebox.showerror("Erreur d'exécution", text)
 
     def _display_results(self, chemins, start):
+        self.chemins = chemins[:]
         disp_queue = []
         for sommet in chemins[0].keys():
             for voisin in chemins[0][sommet]:
