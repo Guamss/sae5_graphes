@@ -1,102 +1,44 @@
-import {Component, EventEmitter, OnDestroy, Output} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
-import {Grid} from '../model/grid';
-import {Subscription} from 'rxjs';
+import { Component, OnInit, Input } from '@angular/core';
+import { NgForOf } from '@angular/common';
 
 @Component({
-    selector: 'app-hexagon-grid',
-    imports: [CommonModule, FormsModule,],
-    templateUrl: './hexagon-grid.component.html',
-    standalone: true,
-    styleUrl: './hexagon-grid.component.css'
+  selector: 'app-hexagon-grid',
+  templateUrl: './hexagon-grid.component.html',
+  standalone: true,
+  imports: [
+    NgForOf
+  ],
+  styleUrls: ['./hexagon-grid.component.css']
 })
-export class HexagonGridComponent implements OnDestroy {
-    @Output() newGrid = new EventEmitter<Grid>(); // Déclare l'@Output pour émettre le grid
+export class HexagonGridComponent implements OnInit {
+  @Input() width: number = 10; // Add @Input to accept longueur
+  @Input() height: number = 10; // Add @Input to accept largeur
 
-    selectedColor: string = "white";
-    colorWeightDict: any = {
-        "white": 1,
-        "green": 10,
-        "aqua": 20,
-        "yellow": 30,
-        "black": 40
-    };
+  calculatedPositions: { x: number, y: number }[] = [];
 
-    grid: Grid = {
-        height: 5,
-        width: 5,
-        start: [0, 0],
-        end: [4, 4],
-        tab: []  // On garde ici les poids des hexagones
-    };
+  constructor() { }
 
-    isSettingStart: boolean = false;
-    isSettingEnd: boolean = false;
-    subs: Subscription[] = [];
+  ngOnInit(): void {
+    this.calculatePositions();
+  }
 
-    constructor() {
-        this.generateGrid();
+  calculatePositions(): void {
+    const startX = 35; // Coordonnée de départ X
+    const startY = 41; // Coordonnée de départ Y
+    const spacingX = 15; // Espacement entre les "pods"
+    const spacingY = 18; // Espacement entre les "pods"
+
+    this.calculatedPositions = [];
+
+    // Parcours de la largeur (hauteur du grid)
+    for (let j = 0; j < this.height; j++) {
+      // Parcours de la longueur (largeur du grid)
+      for (let i = 0; i < this.width; i++) {
+        const x = startX + i * spacingX; // Déplacement en X
+        const y = startY + (j * spacingY) + (i % 2 === 0 ? 0 : spacingY / 2); // Ajustement en Y pour créer l'effet décalé
+
+        this.calculatedPositions.push({ x, y });
+      }
     }
-
-    generateGrid(): void {
-        this.grid.tab = Array.from({length: this.grid.height}, () =>
-            Array.from({length: this.grid.width}, () => 1) // Initialise les poids à 1
-        );
-        this.emitGrid();
-    }
-
-    getColorForWeight(weight: number): string {
-        switch (weight) {
-            case 1:
-                return 'white';
-            case 10:
-                return 'green';
-            case 20:
-                return 'aqua';
-            case 30:
-                return 'yellow';
-            case 40:
-                return 'black';
-            default:
-                return 'grey';
-        }
-    }
-
-    onHexClick(row: number, col: number): void {
-        if (this.isSettingStart) {
-            this.grid.start = [row, col];
-            this.isSettingStart = false;
-        } else if (this.isSettingEnd) {
-            this.grid.end = [row, col];
-            this.isSettingEnd = false;
-        } else {
-            this.grid.tab[row][col] = this.colorWeightDict[this.selectedColor];
-        }
-        this.emitGrid(); // Émet la grille mise à jour après un clic
-    }
-
-    updateGrid(rows: number, cols: number): void {
-        this.grid.height = rows;
-        this.grid.width = cols;
-        this.generateGrid();
-    }
-
-    setStartMode(): void {
-        this.isSettingStart = true;
-        this.isSettingEnd = false;
-    }
-
-    setEndMode(): void {
-        this.isSettingEnd = true;
-        this.isSettingStart = false;
-    }
-
-    emitGrid(): void {
-        this.newGrid.emit(this.grid); // Émet la grille actuelle
-    }
-
-    ngOnDestroy(): void {
-        this.subs.forEach(sub => sub.unsubscribe());
-    }
+  }
 }
