@@ -402,21 +402,19 @@ class Grille:
         distance = abs(sommet.x - end.x) + abs(sommet.y - end.y)
         return distance
 
-    def a_star(self, start: Sommet, end: Sommet):
-        file_attente: list[Sommet] = [start] #File doit être trié avec l'heuristique
-        predecesseur: dict[Sommet: Sommet] = {start: None}
-        cout_acces = {start: 0}
-
-        courant = file_attente.pop(0)
-        while courant != end:
-            courant.visited = True
-            courant_voisin = self.get_neighbors(courant)
-            for voisin in courant_voisin:
-                if voisin
-                    file_attente.append(voisin)
-                    predecesseur[voisin] = courant
-                    cout_acces[voisin] = cout_acces[courant] + 1
-
-            courant = file_attente.pop(0)
-
-
+    # def a_star(self, start: Sommet, end: Sommet):
+    #     file_attente: list[Sommet] = [start] #File doit être trié avec l'heuristique
+    #     predecesseur: dict[Sommet: Sommet] = {start: None}
+    #     cout_acces = {start: 0}
+    #
+    #     courant = file_attente.pop(0)
+    #     while courant != end:
+    #         courant.visited = True
+    #         courant_voisin = self.get_neighbors(courant)
+    #         for voisin in courant_voisin:
+    #             if voisin
+    #                 file_attente.append(voisin)
+    #                 predecesseur[voisin] = courant
+    #                 cout_acces[voisin] = cout_acces[courant] + 1
+    #
+    #         courant = file_attente.pop(0)

@@ -1,6 +1,6 @@
-import random
-from math import cos, sin, sqrt, radians
 from tkinter import messagebox, Canvas, Tk, DoubleVar, Menu, Frame, Scale, HORIZONTAL, Label, Button, LAST
+from math import cos, sin, sqrt, radians
+import random
 
 from exceptions import NotConnectedGraphException
 from models import Grille, Sommet
@@ -12,7 +12,6 @@ GREEN = "#9CCC65"
 YELLOW = "#FBC02D"
 PURPLE = "#BA68C8"
 RED = "#D50000"
-
 
 class ColorHexagon:
     def __init__(self, parent, x, y, length, color, id):
@@ -212,7 +211,7 @@ class App(Tk):
 
         self.paths.append(self.canvas.create_line(
             start_x, start_y, end_x, end_y,
-            fill=color, width=5, arrow=LAST
+            fill=color, width=self.hex_size//4, arrow=LAST
         ))
 
     def paint_hexagon(self, col: int, row: int, color: str):
@@ -251,12 +250,11 @@ class App(Tk):
         height = self.winfo_height()
         width = self.winfo_width()
 
-        self.hex_size = min(
-            (width * (0.6 * 0.75) / (self.num_cols // 2 + ((self.num_cols // 2) + self.num_cols % 2) * 1.5)),
-            (height * (0.8 * 0.9) / (self.num_rows * sqrt(3))))  # TODO : trouver relation de hex_size
+        self.hex_size = min((width * 0.6 / ((self.num_cols+1) * 1.5)),
+                            (height * 0.95 / ((self.num_rows+1) * sqrt(3))))
         self.hex_width = self.hex_size * 1.5
         self.hex_height = self.hex_size * sqrt(3)
-        self.canvas.config(width=width * 0.6, height=height * 0.8)
+        self.canvas.config(width=(self.num_cols+2)*self.hex_width, height=(self.num_rows+2)*self.hex_height)
 
         self.canvas.delete("all")
 
