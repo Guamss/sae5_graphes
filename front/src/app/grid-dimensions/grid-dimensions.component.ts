@@ -45,8 +45,8 @@ export class GridDimensionsComponent {
         const updatedGrid: Grid = {
           width: this.width,
           height: this.height,
-          start: [0, this.height - 1], // Ajuster les coordonnées de départ
-          end: [this.width - 1, 0], // Ajuster les coordonnées d'arrivée
+          start: [this.width - 1, 0], // Ajuster les coordonnées d'arrivée
+          end: [0, this.height - 1], // Ajuster les coordonnées de départ
           tab: Array.from({ length: this.height }, () => Array(this.width).fill(1)) // Initialize the tab array
         };
         this.gridUpdated.emit(updatedGrid);  // Émettre l'événement avec la nouvelle grille
