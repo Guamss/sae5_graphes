@@ -1,29 +1,29 @@
 <div class="color-buttons">
-  <div class="color-button" (click)="changeColor('white')">
-    <button class="white"></button>
-    <span>Blanc</span>
-  </div>
-  <div class="color-button" (click)="changeColor('green')">
-    <button class="green"></button>
-    <span>Vert</span>
-  </div>
-  <div class="color-button" (click)="changeColor('aqua')">
-    <button class="aqua"></button>
-    <span>Bleu</span>
-  </div>
-  <div class="color-button" (click)="changeColor('yellow')">
-    <button class="yellow"></button>
-    <span>Jaune</span>
-  </div>
-  <div class="color-button" (click)="changeColor('black')">
+  <div class="color-button" [ngClass]="{'pressed': isColorUsed('black')}" (click)="changeColor('black')">
     <button class="black"></button>
     <span>Noir</span>
   </div>
-  <div class="color-button" (click)="changeColor('magenta')">
+  <div class="color-button" [ngClass]="{'pressed': isColorUsed('white')}" (click)="changeColor('white')">
+    <button class="white"></button>
+    <span>Blanc (Poids = 1)</span>
+  </div>
+  <div class="color-button" [ngClass]="{'pressed': isColorUsed('aqua')}" (click)="changeColor('aqua')">
+    <button class="aqua"></button>
+    <span>Bleu (Poids = 3)</span>
+  </div>
+  <div class="color-button" [ngClass]="{'pressed': isColorUsed('green')}" (click)="changeColor('green')">
+    <button class="green"></button>
+    <span>Vert (Poids = 5)</span>
+  </div>
+  <div class="color-button" [ngClass]="{'pressed': isColorUsed('yellow')}" (click)="changeColor('yellow')">
+    <button class="yellow"></button>
+    <span>Jaune (Poids = 10)</span>
+  </div>
+  <div class="color-button" [ngClass]="{'pressed': isColorUsed('magenta')}" (click)="changeColor('magenta')">
     <button class="magenta"></button>
     <span>Départ</span>
   </div>
-  <div class="color-button" (click)="changeColor('red')">
+  <div class="color-button" [ngClass]="{'pressed': isColorUsed('red')}" (click)="changeColor('red')">
     <button class="red"></button>
     <span>Arrivée</span>
   </div>
