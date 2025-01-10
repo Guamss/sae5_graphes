@@ -5,13 +5,14 @@ from flask import Flask, request, jsonify
 from pydantic import BaseModel
 from spectree import SpecTree, Response
 from sae5_graphes import models
+from exceptions import *
 
 app = Flask(__name__)
 CORS(app)
 api = SpecTree('flask')
 
 # La grille de base est 20x20
-grille = models.Grille(20, 20)
+grille = models.Grille(5, 5)
 
 
 class GridSize(BaseModel):
@@ -20,7 +21,9 @@ class GridSize(BaseModel):
 
 
 class GridWeights(BaseModel):
-    grid: list[list[int]] = Field([[1, 3, 5], [3, 1, 5]], title="Tableau 2D de la grille", description="Liste des poids de la grille")
+    grid: list[list[int]] = Field([[1, 3, 5], [3, 1, 5]], title="Tableau 2D de la grille",
+                                  description="Liste des poids de la grille")
+
 
 # ---- Actions sur la grille ---- #
 @app.route('/grid/dimensions', methods=['GET'])
@@ -99,6 +102,78 @@ def update_grid_weights(json: GridWeights):
         return jsonify({"message": "Tous les poids de la grille ont été mis à jour avec succès"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+class StartEndPoints(BaseModel):
+    start_x: int = Field(19, title="X du sommet de départ")
+    start_y: int = Field(0, title="Y du sommet de départ")
+    end_x: int = Field(0, title="X du sommet de fin")
+    end_y: int = Field(19, title="Y du sommet de fin")
+
+
+def execute_algorithm_common(start, end, algorithm_func):
+    try:
+        result = algorithm_func(start, end)
+        return jsonify({
+            "visited": {str(k): [str(v) for v in vs] for k, vs in result[0].items()},
+            "solution": {str(k): str(v) for k, v in result[1].items()}
+        }), 200
+    except NotConnectedGraphException as e:
+        return jsonify({"error": "Le graphe n'est pas connexe", "details": str(e)}), 400
+    except IndexError as e:
+        return jsonify({"error": "Coordonnées hors de la grille", "details": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": "Une erreur est survenue", "details": str(e)}), 500
+
+
+from functools import wraps
+
+# Fonction générique pour gérer les routes d'algorithmes
+def algorithm_route(algorithm_func):
+    @wraps(algorithm_func)
+    @api.validate(tags=["Algorithmes"], json=StartEndPoints)
+    def wrapper():
+        data = request.get_json()
+        json = StartEndPoints(**data)
+        try:
+            start = grille.tab[json.start_x][json.start_y]
+            end = grille.tab[json.end_x][json.end_y]
+        except IndexError:
+            return jsonify({"error": "Coordonnées hors de la grille"}), 400
+        return execute_algorithm_common(start, end, algorithm_func)
+    return wrapper
+
+# Routes spécifiques pour chaque algorithme
+@app.route('/algorithm/dfs', methods=['POST'])
+@api.validate(tags=["Algorithmes"], json=StartEndPoints)
+def dfs():
+    return algorithm_route(grille.parcours_profondeur)()
+
+@app.route('/algorithm/bfs', methods=['POST'])
+@api.validate(tags=["Algorithmes"], json=StartEndPoints)
+def bfs():
+    return algorithm_route(grille.parcours_largeur)()
+
+@app.route('/algorithm/dijkstra', methods=['POST'])
+@api.validate(tags=["Algorithmes"], json=StartEndPoints)
+def dijkstra():
+    return algorithm_route(grille.parcours_dijkstra)()
+
+@app.route('/algorithm/bellman_ford', methods=['POST'])
+@api.validate(tags=["Algorithmes"], json=StartEndPoints)
+def bellman_ford():
+    return algorithm_route(grille.bellman_ford)()
+
+@app.route('/algorithm/a_star', methods=['POST'])
+@api.validate(tags=["Algorithmes"], json=StartEndPoints)
+def a_star():
+    return algorithm_route(grille.a_star)()
+
+@app.route('/algorithm/random_walk', methods=['POST'])
+@api.validate(tags=["Algorithmes"], json=StartEndPoints)
+def random_walk():
+    return algorithm_route(grille.allerAToire)()
+
 
 if __name__ == "__main__":
     api.register(app)
