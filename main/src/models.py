@@ -265,8 +265,7 @@ class Grille:
 
         return dico_all_result, dico_result # ca pue du cul
 
-    def allerAToire(self, start: Sommet, end: Sommet) -> tuple[
-        dict[Sommet, set[Sommet]], dict[tuple[int, int], tuple[int, int]]]:
+    def allerAToire(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         """
         Parcourt la grille de manière aléatoire de start à end.
 
@@ -281,13 +280,24 @@ class Grille:
         """
         queue: list[Sommet] = [start]
         reachable: dict[Sommet, set[Sommet]] = {start: set()}
-        path: dict[tuple[int, int], tuple[int, int]] = {}
+        path: dict[Sommet, Sommet] = dict()
+        visited: set[Sommet] = set()  # Ensemble des sommets visités
+        known: set[Sommet] = set()  # Ensemble des sommets connus
         end_reached: bool = False  # Drapeau pour indiquer si la fin est atteinte
 
         while queue and not end_reached:
-            current = queue.pop(0)
+            current = queue.pop()
+            visited.add(current)
+            known = known.union(set(self.get_neighbors(current)))
 
             neighbors = self.get_neighbors(current)
+
+            all_walls: bool = True
+            for s in known-visited:
+                if s.weight != self.WALL:
+                    all_walls = False
+            if all_walls:
+                raise NotConnectedGraphException()
 
             if neighbors:
                 not_walls = [neighbor for neighbor in neighbors if neighbor.weight != self.WALL]
@@ -303,13 +313,6 @@ class Grille:
                     if neighbor.x == end.x and neighbor.y == end.y:
                         print("je passe par la youhou")
                         end_reached = True
-                else:
-                    # Si tous les voisins sont des murs, afficher un message
-                    raise NotConnectedGraphException()
-
-        # Vérifier si le sommet de fin n'est jamais atteint
-        if not end_reached:
-            raise NotConnectedGraphException()
 
         return reachable, path
 
