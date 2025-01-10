@@ -371,10 +371,13 @@ class App(Tk):
         self.canvas.itemconfigure(endHexagon.id, fill=RED)
 
     def a_star(self):
-        """
-        Fonction de démonstration pour l'algorithme A*
-        """
-        pass
+        self.clear_arrows()
+        self.grille.init_grid()
+        try:
+            chemins = self.grille.a_star(self.start, self.end)
+            self._display_results(chemins, self.start)
+        except NotConnectedGraphException as e:
+            print(e.message)
 
     def launch_parcours_en_largeur(self):
         self.is_stopped_button_pressed = False

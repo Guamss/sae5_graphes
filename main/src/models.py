@@ -413,23 +413,51 @@ class Grille:
         # Retourner les deux dictionnaires dans un tuple
         return ordered_next_nodes, shortest_path_dict
 
-    def heuristique_manhattan(end : Sommet, sommet : Sommet) -> dict[Sommet:int]:
-        distance = abs(sommet.x - end.x) + abs(sommet.y - end.y)
-        return distance
+    def heuristique_manhattan(self, end: Sommet) -> dict[Sommet:int]:
+        distance_heuristique = {}
+        for ligne in self.tab:
+            for sommet in ligne:
+                if sommet.weight != self.WALL:
+                    distance = abs(end.x - sommet.x) + abs(end.y - sommet.y)
+                    distance_heuristique[sommet] = distance
+        return distance_heuristique
 
-    # def a_star(self, start: Sommet, end: Sommet):
-    #     file_attente: list[Sommet] = [start] #File doit être trié avec l'heuristique
-    #     predecesseur: dict[Sommet: Sommet] = {start: None}
-    #     cout_acces = {start: 0}
-    #
-    #     courant = file_attente.pop(0)
-    #     while courant != end:
-    #         courant.visited = True
-    #         courant_voisin = self.get_neighbors(courant)
-    #         for voisin in courant_voisin:
-    #             if voisin
-    #                 file_attente.append(voisin)
-    #                 predecesseur[voisin] = courant
-    #                 cout_acces[voisin] = cout_acces[courant] + 1
-    #
-    #         courant = file_attente.pop(0)
+    def a_star(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
+        heuristique_manhattan = self.heuristique_manhattan(end)  # Valeur heuriqtique de chaque sommet
+        cout_deplacement: dict[Sommet: int] = {start: 0}
+        cout_acces_total: dict[Sommet: int] = {
+            start: heuristique_manhattan[start]}  # heuristique manhattan + déplacement
+
+        queue: list[tuple[Sommet: int]] = [(start, cout_acces_total[start])]
+        predecesseur: dict[Sommet: Sommet] = {start: None}
+        chemin_parcouru: dict[Sommet, set[Sommet]] = {}
+
+        courant = queue.pop(0)[0]
+        courant.visited = True
+        while courant != end:
+            courant_voisin = self.get_neighbors(courant)
+            if courant not in chemin_parcouru:
+                chemin_parcouru[courant] = set()
+            for voisin in courant_voisin:
+                if voisin.weight == self.WALL or voisin.visited:
+                    continue
+                chemin_parcouru[courant].add(voisin)
+                voisin.visited = True
+                predecesseur[voisin] = courant
+                cout_deplacement[voisin] = cout_deplacement[courant] + voisin.weight
+                cout_acces_total[voisin] = heuristique_manhattan[voisin] + cout_deplacement[voisin]
+                queue.append((voisin, cout_acces_total[voisin]))
+                queue.sort(key=lambda x: x[1])
+            # Si la fil d'attente est vide c'est forcemment que le sommet de depart et d'arrivé ne sont pas dans le même graphe
+            if len(queue) == 0:
+                raise NotConnectedGraphException()
+            courant = queue.pop(0)[0]
+        # Solution
+        solution: dict[Sommet, Sommet] = {}
+        courant = end
+
+        while courant != start:
+            courant_predecesseur = predecesseur[courant]
+            solution[courant_predecesseur] = courant
+            courant = predecesseur[courant]
+        return chemin_parcouru, solution
