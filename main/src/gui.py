@@ -13,6 +13,7 @@ YELLOW = "#FBC02D"
 PURPLE = "#BA68C8"
 RED = "#D50000"
 
+
 class ColorHexagon:
     def __init__(self, parent, x, y, length, color, id):
         self.parent = parent  # Grille d'hexagones
@@ -92,6 +93,8 @@ class App(Tk):
         # Création de la grille d'hexagones
         self.hexagons = {}
         self.init_grid(self.num_cols, self.num_rows, self.hex_size)
+
+        self.fen_size: tuple = (window_height, window_width)
 
     def create_elements(self):
         """
@@ -262,23 +265,27 @@ class App(Tk):
         if self.resize_id is not None:
             self.after_cancel(self.resize_id)
 
-        self.resize_id = self.after(100, self.on_resize_released)
+        self.resize_id = self.after(300, self.on_resize_released)
 
     def on_resize_released(self):
         height = self.winfo_height()
+
         width = self.winfo_width()
 
-        self.hex_size = min((width * 0.6 / ((self.num_cols+1) * 1.5)),
-                            (height * 0.9 / ((self.num_rows+1) * sqrt(3))))
-        self.hex_width = self.hex_size * 1.5
-        self.hex_height = self.hex_size * sqrt(3)
-        self.canvas.config(width=(self.num_cols+2)*self.hex_width, height=(self.num_rows+2)*self.hex_height)
+        if self.fen_size != (height, width):
+            self.fen_size = (height, width)
 
-        self.canvas.delete("all")
+            self.hex_size = min((width * 0.6 / ((self.num_cols+1) * 1.5)),
+                                (height * 0.9 / ((self.num_rows+1) * sqrt(3))))
+            self.hex_width = self.hex_size * 1.5
+            self.hex_height = self.hex_size * sqrt(3)
+            self.canvas.config(width=(self.num_cols+2)*self.hex_width, height=(self.num_rows+2)*self.hex_height)
 
-        self.init_grid(self.num_cols, self.num_rows, self.hex_size)
-        if self.chemins:
-            self._display_results(self.chemins[:], self.start)
+            self.canvas.delete("all")
+
+            self.init_grid(self.num_cols, self.num_rows, self.hex_size)
+            if self.chemins:
+                self._display_results(self.chemins[:], self.start)
 
     def paint_hexagon_on_click(self, x, y):
         """

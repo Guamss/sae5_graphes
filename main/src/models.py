@@ -3,6 +3,7 @@ from typing import Union
 from exceptions import *
 import random
 
+
 class Sommet:
     def __init__(self, weight: int, x: int, y: int) -> None:
         """
@@ -123,7 +124,6 @@ class Grille:
         self.parcours_profondeur_recursive(start, end, visited)
 
         # Le cas où le graphe n'est pas connexe
-        print(len(visited))
         if len(visited) != (self.height * self.width) - self.get_nbr_wall() and end not in visited:
             raise NotConnectedGraphException()
 
@@ -161,8 +161,6 @@ class Grille:
             visited.append(current)
             current[0].visited = True
             for neighbor in self.get_neighbors(current[0]):
-                # --- Zone parallèlisable (on verra si c'est nécessaire)
-
                 if not neighbor.visited and neighbor.weight != self.WALL:
                     is_in_queue = False
                     for t in queue:
@@ -173,8 +171,6 @@ class Grille:
                                 queue.append((neighbor, current[1] + neighbor.weight, current[0]))
                     if not is_in_queue:
                         queue.append((neighbor, current[1] + neighbor.weight, current[0]))
-
-                # --- Fin de zone
 
                 queue.sort(key=lambda t: t[1])
 
@@ -238,6 +234,8 @@ class Grille:
             current: tuple[Sommet, int, Sommet] = queue.pop(0)
             if current[0].x == end.x and current[0].y == end.y:
                 is_end_reached = True
+                visited.append(current)
+                current[0].visited = True
             else:
                 visited.append(current)
                 current[0].visited = True
@@ -247,21 +245,35 @@ class Grille:
                         for t in queue:
                             if t[0] == neighbor:
                                 is_in_queue = True
-                                if current[1] + neighbor.weight < t[1]:
-                                    queue.insert(queue.index(t), (neighbor, current[1] + neighbor.weight, current[0]))
-                                    queue.remove(t)
                         if not is_in_queue:
                             queue.append((neighbor, current[1] + neighbor.weight, current[0]))
 
+        dico_all_result = self.get_all_result_dict(visited)
+
+        back: list[tuple[Sommet, int, Sommet]] = []
+        found_end = False
+        for t in visited:
+            if t[0].x == end.x and t[0].y == end.y:
+                back.append(t)
+                visited.remove(t)
+                found_end = True
+
+        if not found_end:
+            raise NotConnectedGraphException()
+
+        while back[-1][0].x != start.x or back[-1][0].y != start.y:
+            for t in visited:
+                if t[0].x == back[-1][2].x and t[0].y == back[-1][2].y:
+                    back.append(t)
+                    visited.remove(t)
+
         result: list[Sommet] = []
-        for i in range(len(visited) - 1, -1, -1):
-            result.append(visited[i][0])
+        for i in range(len(back) - 1, -1, -1):
+            result.append(back[i][0])
 
         dico_result: dict[Sommet, Sommet] = dict()
-        for i in range(len(result)-1):
-            dico_result[result[i]] = result[i+1]
-
-        dico_all_result = self.get_all_result_dict(visited)
+        for i in range(len(result) - 1):
+            dico_result[result[i]] = result[i + 1]
 
         return dico_all_result, dico_result # ca pue du cul
 
@@ -311,11 +323,9 @@ class Grille:
                     path[current] = neighbor
 
                     if neighbor.x == end.x and neighbor.y == end.y:
-                        print("je passe par la youhou")
                         end_reached = True
 
         return reachable, path
-
 
     def bron_kerbosch(self) -> list[set[Sommet]]:
         """
