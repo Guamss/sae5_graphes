@@ -1,4 +1,4 @@
-from tkinter import messagebox, Canvas, Tk, DoubleVar, Menu, Frame, Scale, HORIZONTAL, Label, Button, LAST
+from tkinter import messagebox, Canvas, Tk, IntVar, Menu, Frame, Scale, HORIZONTAL, Label, Button, LAST
 from math import cos, sin, sqrt, radians
 import random
 
@@ -50,13 +50,15 @@ class ColorHexagon:
 class App(Tk):
     def __init__(self, num_cols, num_rows, window_height, window_width):
         super().__init__()
+        self.scale_widget = None
         self.title("Hexagones")
         self.geometry(f"{window_height}x{window_width}")
 
         # Définir la taille initiale de la grille
-        self.hex_size = 20
         self.num_cols = num_cols
         self.num_rows = num_rows
+        self.hex_size = min((window_width * 0.6 / ((self.num_cols+1) * 1.5)),
+                            (window_height * 0.9 / ((self.num_rows+1) * sqrt(3))))
 
         self.hex_width = self.hex_size * 1.5  # Largeur d'un hexagone
         self.hex_height = self.hex_size * sqrt(3)  # Hauteur d'un hexagone
@@ -83,7 +85,8 @@ class App(Tk):
         self.start = self.grille.tab[0][self.num_cols - 1]
         self.end = self.grille.tab[self.num_rows - 1][0]
 
-        self.speed = DoubleVar()
+        self.speed = IntVar()
+        self.old_speed = None
 
         self.paths = []
         self.chemins = None
@@ -128,7 +131,8 @@ class App(Tk):
 
         Button(frame_config_algo_exec, text="Stopper l'exécution", command=self.stop_algo_exec).pack(side="bottom", padx=5, pady=5)
 
-        Scale(frame_config_algo_exec, variable=self.speed, from_=1, to=1000, orient=HORIZONTAL).pack(side="top", pady=5)
+        self.scale_widget = Scale(frame_config_algo_exec, variable=self.speed, from_=1, to=1000, orient=HORIZONTAL)
+        self.scale_widget.pack(side="top", pady=5)
         Label(frame_config_algo_exec, text="Vitesse d'exécution (en ms)").pack(side="top", pady=5)
 
         # Boutons couleurs
@@ -232,7 +236,7 @@ class App(Tk):
 
         self.paths.append(self.canvas.create_line(
             start_x, start_y, end_x, end_y,
-            fill=color, width=self.hex_size//4, arrow=LAST
+            fill=color, width=self.hex_size//5, arrow=LAST
         ))
 
     def paint_hexagon(self, col: int, row: int, color: str):
@@ -285,6 +289,12 @@ class App(Tk):
 
             self.init_grid(self.num_cols, self.num_rows, self.hex_size)
             if self.chemins:
+                self.old_speed = self.speed.get()
+                self.scale_widget.config(state='disabled', from_=0)
+                self.speed.set(0)
+                for arrow in self.paths:
+                    self.canvas.delete(arrow)
+                self.paths = []
                 self._display_results(self.chemins[:], self.start)
 
     def paint_hexagon_on_click(self, x, y):
@@ -358,6 +368,8 @@ class App(Tk):
 
             if not self.is_sommet_start_or_end(self.grille.tab[row][col]):
                 self.paint_hexagon(col, row, random_color)
+                if row == 0:
+                    self.update()
 
     def init_hexagones(self):
         # Initialisation du départ en bas à gauche
@@ -454,3 +466,7 @@ class App(Tk):
             suivant = chemin[sommet]
             self.paint_path(sommet, suivant, RED)
             self.after(int(self.speed.get()), self._progressive_display_best, chemin, suivant)
+            if self.old_speed:
+                self.speed.set(self.old_speed)
+                self.scale_widget.config(state='normal', from_=1)
+                self.old_speed = None
