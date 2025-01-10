@@ -17,15 +17,16 @@ export class ActionButtonsComponent {
     }
 
     sendGridData() {
-        if (this.grid) {
-            console.log(this.grid)
-            this.gridService.sendWeightGrid(this.grid).subscribe({
-                error: err => console.error(err.message)
-            });
-        } else {
-            console.log("ya rien frr")
+        if (!this.grid) {
+            console.log("Grille non définie");
+            return;
         }
+        console.log(this.grid);
+        this.gridService.sendWeightGrid(this.grid).subscribe({
+            error: (err) => console.error('Error sending grid data:', err.message)
+        });
     }
+
     generateGrid(): void {
         this.gridService.getGridWeights().subscribe({
             next: (weights) => {

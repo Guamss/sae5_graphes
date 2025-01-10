@@ -24,6 +24,10 @@ class Sommet:
         self.y: int = y  # La colonne
         self.visited = False
 
+    def set_weight(self, weight: int):
+        self.weight: int = weight
+        return self
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Sommet):
             return False
