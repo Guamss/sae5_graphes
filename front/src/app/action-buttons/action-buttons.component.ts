@@ -16,10 +16,6 @@ export class ActionButtonsComponent {
     constructor(private gridService: GridService) {
     }
 
-    generateGrid() {
-        console.log("generateGrid")
-    }
-
     sendGridData() {
         if (this.grid) {
             console.log(this.grid)
@@ -29,5 +25,26 @@ export class ActionButtonsComponent {
         } else {
             console.log("ya rien frr")
         }
+    }
+    generateGrid(): void {
+        this.gridService.getGridWeights().subscribe({
+            next: (weights) => {
+                this.grid = {
+                    height: weights.length,
+                    width: weights[0]?.length || 0,
+                    start: [weights[0]?.length - 1, 0], // Point d'arrivée par défaut
+                    end: [0, weights.length - 1], // Point de départ par défaut
+                    tab: weights
+                };
+                this.gridChange.emit(this.grid);
+            },
+            error: (err) => {
+                console.error('Erreur lors du chargement des données de la grille:', err);
+            }
+        });
+    }
+
+    salut() {
+        console.log('jai pas didentitée')
     }
 }
