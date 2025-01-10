@@ -342,41 +342,6 @@ class Grille:
         return reachable, path
 
 
-    def bron_kerbosch(self) -> list[set[Sommet]]:
-        """
-        Implémente l'algorithme de Bron-Kerbosch pour trouver les ensembles stables maximaux
-        sur un graphe représenté par une grille.
-
-        Args:
-            graph (Grille): La grille représentant le graphe.
-
-        Returns:
-            list[set[Sommet]]: Liste des ensembles stables maximaux.
-        """
-        r = set()  # Ensemble courant
-        p = {sommet for ligne in self.tab for sommet in ligne}  # Sommets à explorer
-        x = set()  # Sommets exclus
-        cliques = []  # Résultat des cliques maximales
-
-        stack = [(r, p, x)]  # Pile pour simuler la récursivité
-        while stack:
-            r, p, x = stack.pop()
-
-            if not p and not x:  # Condition de clique maximale
-                cliques.append(r)
-            else:
-                for sommet in list(p):
-                    neighbors = self.get_neighbors(sommet)
-                    stack.append((
-                        r.union({sommet}),
-                        p.intersection(neighbors),
-                        x.intersection(neighbors)
-                    ))
-                    p.remove(sommet)
-                    x.add(sommet)
-
-        return cliques
-
     def bellman_ford(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         # Initialisation des distances avec l'infini (sys.maxsize)
         distances = {sommet: sys.maxsize for ligne in self.tab for sommet in ligne}
