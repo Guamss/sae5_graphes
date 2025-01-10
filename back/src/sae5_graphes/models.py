@@ -3,6 +3,7 @@ from typing import Union
 from exceptions import *
 import random
 
+
 class Sommet:
     def __init__(self, weight: int, x: int, y: int) -> None:
         """
@@ -23,10 +24,6 @@ class Sommet:
         self.x: int = x  # La ligne
         self.y: int = y  # La colonne
         self.visited = False
-
-    def set_weight(self, weight: int):
-        self.weight: int = weight
-        return self
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Sommet):
@@ -60,9 +57,9 @@ class Grille:
     def __init__(self, height: int, width: int) -> None:
         self.height: int = height
         self.width: int = width
-        self.WALL: int = sys.maxsize # on prend un entier très grand pour définir ce qu'est un mur
+        self.WALL: int = 10000 # on prend un entier très grand pour définir ce qu'est un mur
         self.tab: list[list[Sommet]] = \
-            [[Sommet(1, x, y) for y in range(width)] for x in range(height)]
+            [[Sommet(1, x, y) for y in range(height)] for x in range(width)]
 
     def __str__(self) -> str:
         out: str = ""
@@ -88,7 +85,7 @@ class Grille:
         neighbors: set[Sommet] = set()
         for i in range(s.x - 1, s.x + 2):
             for j in range(s.y - 1, s.y + 2):
-                if 0 <= i < self.height and 0 <= j < self.width and (i != s.x or j != s.y):  # in Grille && !current
+                if 0 <= i < self.width and 0 <= j < self.height and (i != s.x or j != s.y):  # in Grille && !current
                     if i != s.x and j != s.y:  # Une case angle
                         if s.y % 2:  # Colone
                             if i == s.x + 1:
@@ -103,8 +100,8 @@ class Grille:
 
     def get_nbr_wall(self) -> int:
         """
-        Calcule le nombre de murs dans la grille
-        :return: le nombre total de murs dans la grille
+        Calcule le nombre de
+        :return: le nombre total de mur dans la grille
         """
         nbr_wall: int = 0
         for ligne in self.tab:  # Parcourt chaque ligne (liste de sommets)
@@ -127,7 +124,7 @@ class Grille:
         self.parcours_profondeur_recursive(start, end, visited)
 
         # Le cas où le graphe n'est pas connexe
-        if len(visited) != (self.height * self.width) - self.get_nbr_wall():
+        if len(visited) != (self.height * self.width) - self.get_nbr_wall() and end not in visited:
             raise NotConnectedGraphException()
 
         # Solution
@@ -155,33 +152,6 @@ class Grille:
                     return True
         return False
 
-    def parcours_naif(self, start: Sommet, end: Sommet) -> dict[Sommet, list[Sommet]]:
-        """
-        Le parcours naif va se contenter de parcourir la grille en prenant ses voisins avec le poid le moins lourd
-
-        Args:
-            start (Sommet): le sommet de départ
-            end: (Sommet): le sommet de fin
-        """
-        # TODO : a faire en recurcif pour remonter quand ça tourne en rond
-        visited = []
-        end_reached = False
-        actual_sommet = start
-        while not end_reached:
-            visited.visited = True
-            visited.append(actual_sommet)
-            if actual_sommet == end:
-                end_reached = True
-
-            actual_sommet_neighbors = self.get_neighbors(actual_sommet)
-            min_weight_neighbor: Sommet = Sommet(9999, 0, 0)  # un sommet quelconque
-            for neighbor in actual_sommet_neighbors:
-                if neighbor.weight < min_weight_neighbor.weight and not neighbor.visited:
-                    min_weight_neighbor = neighbor
-            actual_sommet = min_weight_neighbor
-
-        return {start: visited}
-
     def parcours_dijkstra(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         queue: list[tuple[Sommet, int, Union[Sommet, None]]] = [(start, 0, start)]
         visited: list[tuple[Sommet, int, Union[Sommet, None]]] = []
@@ -191,9 +161,6 @@ class Grille:
             visited.append(current)
             current[0].visited = True
             for neighbor in self.get_neighbors(current[0]):
-
-                # --- Zone parallèlisable (on verra si c'est nécessaire)
-
                 if not neighbor.visited and neighbor.weight != self.WALL:
                     is_in_queue = False
                     for t in queue:
@@ -204,8 +171,6 @@ class Grille:
                                 queue.append((neighbor, current[1] + neighbor.weight, current[0]))
                     if not is_in_queue:
                         queue.append((neighbor, current[1] + neighbor.weight, current[0]))
-
-                # --- Fin de zone
 
                 queue.sort(key=lambda t: t[1])
 
@@ -269,6 +234,8 @@ class Grille:
             current: tuple[Sommet, int, Sommet] = queue.pop(0)
             if current[0].x == end.x and current[0].y == end.y:
                 is_end_reached = True
+                visited.append(current)
+                current[0].visited = True
             else:
                 visited.append(current)
                 current[0].visited = True
@@ -278,30 +245,39 @@ class Grille:
                         for t in queue:
                             if t[0] == neighbor:
                                 is_in_queue = True
-                                if current[1] + neighbor.weight < t[1]:
-                                    queue.insert(queue.index(t), (neighbor, current[1] + neighbor.weight, current[0]))
-                                    queue.remove(t)
                         if not is_in_queue:
                             queue.append((neighbor, current[1] + neighbor.weight, current[0]))
 
+        dico_all_result = self.get_all_result_dict(visited)
+
+        back: list[tuple[Sommet, int, Sommet]] = []
+        found_end = False
+        for t in visited:
+            if t[0].x == end.x and t[0].y == end.y:
+                back.append(t)
+                visited.remove(t)
+                found_end = True
+
+        if not found_end:
+            raise NotConnectedGraphException()
+
+        while back[-1][0].x != start.x or back[-1][0].y != start.y:
+            for t in visited:
+                if t[0].x == back[-1][2].x and t[0].y == back[-1][2].y:
+                    back.append(t)
+                    visited.remove(t)
+
         result: list[Sommet] = []
-        for i in range(len(visited) - 1, -1, -1):
-            result.append(visited[i][0])
+        for i in range(len(back) - 1, -1, -1):
+            result.append(back[i][0])
 
         dico_result: dict[Sommet, Sommet] = dict()
-        for i in range(len(result)-1):
-            dico_result[result[i]] = result[i+1]
-
-        dico_all_result = self.get_all_result_dict(visited)
+        for i in range(len(result) - 1):
+            dico_result[result[i]] = result[i + 1]
 
         return dico_all_result, dico_result # ca pue du cul
 
-    import random
-
-    import random
-
-    def allerAToire(self, start: Sommet, end: Sommet) -> tuple[
-        dict[Sommet, set[Sommet]], dict[tuple[int, int], tuple[int, int]]]:
+    def allerAToire(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         """
         Parcourt la grille de manière aléatoire de start à end.
 
@@ -316,35 +292,40 @@ class Grille:
         """
         queue: list[Sommet] = [start]
         reachable: dict[Sommet, set[Sommet]] = {start: set()}
-        path: dict[tuple[int, int], tuple[int, int]] = {}
+        path: dict[Sommet, Sommet] = dict()
+        visited: set[Sommet] = set()  # Ensemble des sommets visités
+        known: set[Sommet] = set()  # Ensemble des sommets connus
         end_reached: bool = False  # Drapeau pour indiquer si la fin est atteinte
 
         while queue and not end_reached:
-            current = queue.pop(0)
+            current = queue.pop()
+            visited.add(current)
+            known = known.union(set(self.get_neighbors(current)))
 
             neighbors = self.get_neighbors(current)
-            reachable[current] = neighbors
+
+            all_walls: bool = True
+            for s in known-visited:
+                if s.weight != self.WALL:
+                    all_walls = False
+            if all_walls:
+                raise NotConnectedGraphException()
 
             if neighbors:
                 not_walls = [neighbor for neighbor in neighbors if neighbor.weight != self.WALL]
-                reachable[current] = set(not_walls)
                 if not_walls:
                     neighbor = random.choice(not_walls)
                     queue.append(neighbor)
-                    path[(current.x, current.y)] = (neighbor.x, neighbor.y)
+                    if current in reachable.keys():
+                        reachable[current].add(neighbor)
+                    else:
+                        reachable[current] = {neighbor}
+                    path[current] = neighbor
 
-                    if neighbor == end:
+                    if neighbor.x == end.x and neighbor.y == end.y:
                         end_reached = True
-                else:
-                    # Si tous les voisins sont des murs, afficher un message
-                    raise NotConnectedGraphException()
-
-        # Vérifier si le sommet de fin n'est jamais atteint
-        if not end_reached:
-            raise NotConnectedGraphException()
 
         return reachable, path
-
 
     def bellman_ford(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         # Initialisation des distances avec l'infini (sys.maxsize)
@@ -397,5 +378,51 @@ class Grille:
         # Retourner les deux dictionnaires dans un tuple
         return ordered_next_nodes, shortest_path_dict
 
-    def a_star(self, start: Sommet, end: Sommet):
-        queue: list[tuple[Sommet, int, Union[Sommet, None]]] = [(start, 0, start)]
+    def heuristique_manhattan(self, end: Sommet) -> dict[Sommet:int]:
+        distance_heuristique = {}
+        for ligne in self.tab:
+            for sommet in ligne:
+                if sommet.weight != self.WALL:
+                    distance = abs(end.x - sommet.x) + abs(end.y - sommet.y)
+                    distance_heuristique[sommet] = distance
+        return distance_heuristique
+
+    def a_star(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
+        heuristique_manhattan = self.heuristique_manhattan(end)  # Valeur heuriqtique de chaque sommet
+        cout_deplacement: dict[Sommet: int] = {start: 0}
+        cout_acces_total: dict[Sommet: int] = {
+            start: heuristique_manhattan[start]}  # heuristique manhattan + déplacement
+
+        queue: list[tuple[Sommet: int]] = [(start, cout_acces_total[start])]
+        predecesseur: dict[Sommet: Sommet] = {start: None}
+        chemin_parcouru: dict[Sommet, set[Sommet]] = {}
+
+        courant = queue.pop(0)[0]
+        courant.visited = True
+        while courant != end:
+            courant_voisin = self.get_neighbors(courant)
+            if courant not in chemin_parcouru:
+                chemin_parcouru[courant] = set()
+            for voisin in courant_voisin:
+                if voisin.weight == self.WALL or voisin.visited:
+                    continue
+                chemin_parcouru[courant].add(voisin)
+                voisin.visited = True
+                predecesseur[voisin] = courant
+                cout_deplacement[voisin] = cout_deplacement[courant] + voisin.weight
+                cout_acces_total[voisin] = heuristique_manhattan[voisin] + cout_deplacement[voisin]
+                queue.append((voisin, cout_acces_total[voisin]))
+                queue.sort(key=lambda x: x[1])
+            # Si la fil d'attente est vide c'est forcemment que le sommet de depart et d'arrivé ne sont pas dans le même graphe
+            if len(queue) == 0:
+                raise NotConnectedGraphException()
+            courant = queue.pop(0)[0]
+        # Solution
+        solution: dict[Sommet, Sommet] = {}
+        courant = end
+
+        while courant != start:
+            courant_predecesseur = predecesseur[courant]
+            solution[courant_predecesseur] = courant
+            courant = predecesseur[courant]
+        return chemin_parcouru, solution

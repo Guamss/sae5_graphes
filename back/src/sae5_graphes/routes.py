@@ -97,7 +97,7 @@ def update_grid_weights(json: GridWeights):
 
         for col in range(columns):
             for row in range(rows):
-                grille.tab[col][row].set_weight(json.grid[col][row])
+                grille.tab[col][row].weight = json.grid[col][row]
 
         return jsonify({"message": "Tous les poids de la grille ont été mis à jour avec succès"}), 200
     except Exception as e:
@@ -113,6 +113,7 @@ class StartEndPoints(BaseModel):
 
 def execute_algorithm_common(start, end, algorithm_func):
     try:
+        grille.init_grid()
         result = algorithm_func(start, end)
         return jsonify({
             "visited": {str(k): [str(v) for v in vs] for k, vs in result[0].items()},

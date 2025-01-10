@@ -1,3 +1,4 @@
+<p-toast></p-toast>
 <div>
   <label for="rows">Nombre de lignes :</label>
   <input id="rows" type="number" min="2" max="1000" [(ngModel)]="height" />
@@ -6,8 +7,4 @@
   <input id="cols" type="number" min="2" max="1000" [(ngModel)]="width" />
 
   <button (click)="sendGrid()">Générer la grille</button>
-</div>
-
-<div *ngIf="message" class="message">
-  {{ message }}
 </div>

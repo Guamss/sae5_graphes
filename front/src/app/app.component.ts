@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
-import { Grid } from './model/grid';
-import { GridService } from './service/grid.service';
+import {Component} from '@angular/core';
+import {Grid} from './model/grid';
+import {GridService} from './service/grid.service';
 import {ActionButtonsComponent} from "./action-buttons/action-buttons.component";
 import {ColorButtonsComponent} from "./color-buttons/color-buttons.component";
 import {HexagonGridComponent} from "./hexagon-grid/hexagon-grid.component";
@@ -19,6 +19,9 @@ import {GridDimensionsComponent} from "./grid-dimensions/grid-dimensions.compone
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+  currentVisited: Map<[number, number], [number, number]> | undefined;
+  currentSolution: Map<[number, number], [number, number]> | undefined;
+  currentWeightSum: number | undefined;
   title = 'chiffredeux';
   currentGrid: Grid | undefined;
   selectedColor: string = 'black'; // couleur de base
@@ -44,6 +47,18 @@ export class AppComponent {
         console.error('Erreur lors du chargement des données de la grille:', err);
       }
     });
+  }
+
+  updateVisited(newVisited: Map<[number, number], [number, number]>) {
+    this.currentVisited = newVisited;
+  }
+
+  updateSolution(newSolution: Map<[number, number], [number, number]>) {
+    this.currentSolution = newSolution;
+  }
+
+  updateSumWeight(newSumWeight: number) {
+    this.currentWeightSum = newSumWeight
   }
 
   updateGrid(newGrid: Grid): void {

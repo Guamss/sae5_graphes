@@ -28,26 +28,26 @@ export class GridService {
     }
 
     runDFS(startX: number, startY: number, endX: number, endY: number): Observable<any> {
-        return this.http.post(`${this.apiUrlAlgo}/dfs`, { start_x: startX, start_y: startY, end_x: endX, end_y: endY });
+        return this.http.post<any>(`${this.apiUrlAlgo}/dfs`, { end_x: endX, end_y: endY, start_x: startX, start_y: startY });
     }
 
     runBFS(startX: number, startY: number, endX: number, endY: number): Observable<any> {
-        return this.http.post(`${this.apiUrlAlgo}/bfs`, { start_x: startX, start_y: startY, end_x: endX, end_y: endY });
+        return this.http.post<any>(`${this.apiUrlAlgo}/bfs`, { end_x: endX, end_y: endY, start_x: startX, start_y: startY });
     }
 
     runDijkstra(startX: number, startY: number, endX: number, endY: number): Observable<any> {
-        return this.http.post(`${this.apiUrlAlgo}/dijkstra`, { start_x: startX, start_y: startY, end_x: endX, end_y: endY });
+        return this.http.post<any>(`${this.apiUrlAlgo}/dijkstra`, { end_x: endX, end_y: endY, start_x: startX, start_y: startY });
     }
 
     runBellmanFord(startX: number, startY: number, endX: number, endY: number): Observable<any> {
-        return this.http.post(`${this.apiUrlAlgo}/bellman_ford`, { start_x: startX, start_y: startY, end_x: endX, end_y: endY });
+        return this.http.post<any>(`${this.apiUrlAlgo}/bellman_ford`, { end_x: endX, end_y: endY, start_x: startX, start_y: startY });
     }
 
     runAStar(startX: number, startY: number, endX: number, endY: number): Observable<any> {
-        return this.http.post(`${this.apiUrlAlgo}/a_star`, { start_x: startX, start_y: startY, end_x: endX, end_y: endY });
+        return this.http.post<any>(`${this.apiUrlAlgo}/a_star`, { end_x: endX, end_y: endY, start_x: startX, start_y: startY });
     }
 
     runRandomWalk(startX: number, startY: number, endX: number, endY: number): Observable<any> {
-        return this.http.post(`${this.apiUrlAlgo}/random_walk`, { start_x: startX, start_y: startY, end_x: endX, end_y: endY });
+        return this.http.post<any>(`${this.apiUrlAlgo}/random_walk`, { end_x: endX, end_y: endY, start_x: startX, start_y: startY });
     }
 }

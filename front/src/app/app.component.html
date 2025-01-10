@@ -1,14 +1,22 @@
 <img src="/chiffredeux.png" alt="Image de chiffre deux"/>
 <div class="app-container">
   <div class="action-buttons-container">
-    <app-action-buttons [grid]="currentGrid" (gridChange)="updateGrid($event)"></app-action-buttons>
+    <app-action-buttons [grid]="currentGrid"
+                        (gridChange)="updateGrid($event)"
+                        (solutionChange)="updateSolution($event)"
+                        (visitedChange)="updateVisited($event)"
+                        (sumWeightChange)="updateSumWeight($event)"></app-action-buttons>
   </div>
   <div class="main-content">
     <div class="color-buttons-container">
       <app-color-buttons (colorChange)="onColorChange($event)"></app-color-buttons>
     </div>
     <div class="grid-container">
-      <app-hexagon-grid [grid]="currentGrid" [selectedColor]="selectedColor"></app-hexagon-grid>
+      <app-hexagon-grid [solution]="currentSolution"
+                        [visited]="currentVisited"
+                        [sumWeight]="currentWeightSum"
+                        [grid]="currentGrid"
+                        [selectedColor]="selectedColor"></app-hexagon-grid>
     </div>
     <div class="grid-dimensions-container">
       <app-grid-dimensions (gridUpdated)="updateGrid($event)"></app-grid-dimensions>
