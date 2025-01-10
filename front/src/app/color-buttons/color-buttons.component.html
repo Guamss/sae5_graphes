@@ -1,7 +1,30 @@
-<div>
-  <button (click)="changeColor('white')">Blanc</button>
-  <button (click)="changeColor('green')">Vert</button>
-  <button (click)="changeColor('aqua')">Bleu</button>
-  <button (click)="changeColor('yellow')">Jaune</button>
-  <button (click)="changeColor('black')">Noir</button>
+<div class="color-buttons">
+  <div class="color-button" (click)="changeColor('white')">
+    <button class="white"></button>
+    <span>Blanc</span>
+  </div>
+  <div class="color-button" (click)="changeColor('green')">
+    <button class="green"></button>
+    <span>Vert</span>
+  </div>
+  <div class="color-button" (click)="changeColor('aqua')">
+    <button class="aqua"></button>
+    <span>Bleu</span>
+  </div>
+  <div class="color-button" (click)="changeColor('yellow')">
+    <button class="yellow"></button>
+    <span>Jaune</span>
+  </div>
+  <div class="color-button" (click)="changeColor('black')">
+    <button class="black"></button>
+    <span>Noir</span>
+  </div>
+  <div class="color-button" (click)="changeColor('magenta')">
+    <button class="magenta"></button>
+    <span>Départ</span>
+  </div>
+  <div class="color-button" (click)="changeColor('red')">
+    <button class="red"></button>
+    <span>Arrivée</span>
+  </div>
 </div>

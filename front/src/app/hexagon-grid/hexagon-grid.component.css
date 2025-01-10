@@ -2,19 +2,20 @@
 use {
   transition: 0.4s;
   cursor: pointer;
-  fill: transparent;
+  fill: white;
 }
 
 .pod-wrap use:hover {
-  fill: #000000;
+  filter: brightness(0.6);
 }
 
 /* other styling */
 svg {
-  width: 100%; /* Adapte la taille du SVG au parent */
-  height: auto; /* Permet de maintenir l'aspect ratio du SVG */
-  max-width: 100%; /* Empêche le SVG de dépasser le conteneur */
-  display: block; /* Éviter les marges automatiques du SVG */
+  background: #d7eafd;
+  width: 75vh;
+  height: auto;
+  max-width: 100%;
+  display: block;
 }
 
 body {
@@ -24,9 +25,10 @@ body {
   flex-direction: column;
   margin: 0;
   height: 100vh;
-  font-weight: 700;
-  font-family: sans-serif;
-  overflow: hidden; /* Évite tout débordement de contenu */
+  font-weight: 400;
+  font-family: 'Roboto', sans-serif;
+  background-color: #f8f9fa;
+  overflow: hidden;
 }
 
 .container {
@@ -35,24 +37,37 @@ body {
   align-items: center;
   width: 100%;
   height: 100%;
-  padding: 10px; /* Ajoute un peu d'espace autour de la grille */
-  overflow: auto; /* Permet le défilement si nécessaire */
+  padding: 20px;
+  overflow: auto;
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
 }
 
-a {
-  color: #ccc;
-  padding: 10px;
-  text-decoration: none;
-  transition: color 0.4s;
-}
-
-a:hover {
-  color: #333;
-}
 .hexagon-start {
-  fill: magenta;
+  fill: #e83e8c;
 }
 
 .hexagon-end {
-  fill: red;
+  fill: #dc3545;
+}
+
+.white {
+  fill: #ffffff;
+}
+
+.green {
+  fill: #28a745;
+}
+
+.aqua {
+  fill: #17a2b8;
+}
+
+.yellow {
+  fill: #ffc107;
+}
+
+.black {
+  fill: #343a40;
 }

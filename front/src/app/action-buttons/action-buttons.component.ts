@@ -7,7 +7,7 @@ import {GridService} from "../service/grid.service";
     imports: [],
     templateUrl: './action-buttons.component.html',
     standalone: true,
-    styleUrls: ['./action-buttons.component.css'] // Correction ici
+    styleUrls: ['./action-buttons.component.css']
 })
 export class ActionButtonsComponent {
     @Input() grid: Grid | undefined
@@ -16,17 +16,8 @@ export class ActionButtonsComponent {
     constructor(private gridService: GridService) {
     }
 
-
     generateGrid() {
         console.log("generateGrid")
-    }
-
-    setStartMode() {
-        console.log("setStartMode")
-    }
-
-    setEndMode() {
-        console.log("setEndMode")
     }
 
     sendGridData() {
@@ -38,6 +29,5 @@ export class ActionButtonsComponent {
         } else {
             console.log("ya rien frr")
         }
-
     }
 }

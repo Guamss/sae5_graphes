@@ -1,5 +1,16 @@
-<h1>{{ title }}</h1>
-<app-action-buttons [grid]="currentGrid" (gridChange)="updateGrid($event)"></app-action-buttons>
-<app-color-buttons></app-color-buttons>
-<app-hexagon-grid [grid]="currentGrid"></app-hexagon-grid>
-<app-grid-dimensions (gridUpdated)="updateGrid($event)"></app-grid-dimensions>
+<div class="app-container">
+  <div class="action-buttons-container">
+    <app-action-buttons [grid]="currentGrid" (gridChange)="updateGrid($event)"></app-action-buttons>
+  </div>
+  <div class="main-content">
+    <div class="color-buttons-container">
+      <app-color-buttons (colorChange)="onColorChange($event)"></app-color-buttons>
+    </div>
+    <div class="grid-container">
+      <app-hexagon-grid [grid]="currentGrid" [selectedColor]="selectedColor"></app-hexagon-grid>
+    </div>
+    <div class="grid-dimensions-container">
+      <app-grid-dimensions (gridUpdated)="updateGrid($event)"></app-grid-dimensions>
+    </div>
+  </div>
+</div>
