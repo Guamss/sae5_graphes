@@ -49,7 +49,7 @@ export class GridDimensionsComponent {
                 this.messageService.add({
                     severity: 'success',
                     summary: 'Succès !',
-                    detail: '\'Dimensions de la grille envoyées avec succès !\''
+                    detail: 'Dimensions de la grille envoyées avec succès ! '
                 });
                 // Créer une nouvelle grille avec les dimensions mises à jour
                 const updatedGrid: Grid = {
