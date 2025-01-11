@@ -12,21 +12,16 @@ interactive et intuitive.
 
 > ### Table des matières :
 
-> #### Aspect technique
+#### Aspect technique :
 * Installation et configuration
 * Langages et outils utilisés
 * Architecture du logiciel
 
-> #### Aspect fonctionnel
-* Présentation de l'interface du logiciel (tkinter)
-  - Fonctionnalités principales 
-  - Gestion des erreurs et messages
-
+#### Aspect fonctionnel :
+* Présentation de l'interface avec tkinter
 * Présentation de l'interface web (angular)
-  - Fonctionnalités principales 
-  - Gestion des erreurs et messages
 
-> #### Aspect théorique 
+#### Aspect théorique :
 * Présentation des algorithmes (screen un exemple pour chaque parcours) (mettre des liens)
   - Parcours en profondeur 
   - Parcours en largeur
@@ -36,9 +31,18 @@ interactive et intuitive.
   - AllerÀToire
 
 > ##### Installation et configuration
-A compléter...
-Python, nodejs, docker
-librairie utilisé : tkinter, random, math
+Installation des dépendances et lancement du serveur web
+```
+cd back
+pdm install
+pdm start
+```
+
+```
+cd front
+npm i 
+ng serve
+```
 
 > ##### Langages et outils utilisés
 * **Python :**
@@ -77,8 +81,54 @@ concevoir une interface graphique interactive, permettant une utilisation direct
 La connexion entre les algorithmes Python et l’interface web Angular est assurée par une API Flask utilisé comme un intermédiaire 
 de communication entre les composants, facilitant les échanges de données et permettant l’intégration fluide des deux environnements.
 
-> ##### Présentation de l'interface du logiciel
-...
+<div style="text-align: center;">
+  <img src="Image/Diagramme_des_classes.png" alt="Architecture logicielle" style="width: 80%; max-width: 800px;">
+  <p>Architecture logicielle utilisée</p>
+</div>
+
+> ##### Présentation de l'interface avec tkinter
+<div style="text-align: center;">
+  <img src="Image/application.jpg" alt="Application avec tkinter" style="width: 50%; max-width: 400px;">
+  <p>Interface 1 avec tkinter</p>
+</div>
+
+L'interface graphique développée avec Tkinter est divisée en 4 grandes parties pour permettre une interaction claire et 
+efficace avec les fonctionnalités. Voici les sections en détail :
+
+##### 1. La grille
+La grille est composée de sommets hexagonales, représentant les sommets du graphe.
+Elle permet de visualiser l’état du graphe, les différents poids attribués aux sommets, ainsi que les murs.
+
+Les utilisateurs peuvent interagir avec la grille pour ajouter ou supprimer des murs, attribuer des poids, et définir un sommet de départ et un objectif.
+La grille affiche également les résultats des algorithmes (différent selon l'algorithme selectionné).
+
+##### 2. Zone de sélection des poids et des murs
+
+Cette section située sur la gauche de l’interface, contient une liste de boutons colorés correspondant aux différents types de cellules :
+  - Mur (noir) : Empêche tout passage dans l’hexagone.
+  - Poids : Chaque couleur correspond à un poids spécifique (exemple : bleu = 3, vert = 5, jaune = 10).
+  - Départ (violet) : Marque le sommet de départ pour les algorithmes.
+  - Objectif (rouge) : Définit le sommet de destination.   
+
+L'utilisateur peut cliquer sur un bouton, puis sur un sommet de la grille pour appliquer l’action correspondante.
+Cette section permet de configurer le graphe avant d’exécuter un des algorithmes.
+
+##### 3. Menu 
+
+Le menu en haut de l’interface regroupe plusieurs fonctionnalité possible :
+  - Algorithmes : Permet de choisir et d'exécuter un algorithme parmi ceux disponibles (Parcour en largeur, Dijkstra, etc...).
+  - Effacer : Offre la possibilité d’effacer le résultat ou de réinitialiser complètement la grille.
+  - Répartition aléatoire : Ajoute aléatoirement des poids et des murs sur la grille.
+  - Afficher les distances : Affichage de la distance parcourue du sommet de départ au sommet d'arrivé.
+
+##### 4. Contrôle de la vitesse d'exécution
+
+Située à droite de l’interface, cette section contient :
+  - Un curseur, permettant de régler la vitesse d’exécution des algorithmes (en millisecondes).
+  - Un bouton d’arrêt : Stoppe l’exécution en cours.
+
+Ce panneau permet à l'utilisateur de ralentir ou d'accélérer l'exécution des algorithmes pour une meilleure visualisation.
+
 > ##### Présentation de l'interface web
 ...
 
@@ -96,7 +146,7 @@ même composante connexe, le parcours se réalise en prenant en compte uniquemen
 de départ et d'arrivé.
 ```
 
-> ##### #### Parcours en profondeur
+> ##### Parcours en profondeur
 ###### Explication :
 Le parcours en profondeur est une méthode classique utilisée pour explorer un graphe. 
 Elle fonctionne en partant d’un sommet de départ et en explorant autant que possible chaque chemin avant de revenir en 
@@ -119,7 +169,7 @@ nombreuses branches d’un graphe avant de trouver la solution.
   <p>Figure 1 : parcours en profondeur</p>
 </div>
 
-> ##### #### Parcours en largeur
+> ##### Parcours en largeur
 ###### Explication :
 
 Le parcours en largeur est une méthode pour explorer un graphe de manière organisée en visitant les sommets niveau par 
@@ -137,11 +187,23 @@ dans l'ordre où on les découvre. On prend toujours le premier sommet de la fil
   <p>Figure 2 : parcours en largeur</p>
 </div>
 
-> ##### #### Parcours avec l’algorithme de Bellman-Ford
+> ##### Parcours avec l’algorithme de Bellman-Ford
 ###### Explication :
-###### Exemple :
 
-> ##### #### Parcours avec l’algorithme de Dijkstra
+L'algorithme de Bellman-Ford est utilisé pour calculer les chemins les plus courts dans un graphe pondéré en prenant en 
+compte les sommets à poids négatifs, mais dans notre algorithme c'est différent, nous avons fait en sorte qu'il ne prend 
+pas en compte les sommets à poids négatifs car notre application n'en possède pas. Elle initialise les distances à l'infini 
+sauf pour le point de départ (distance 0) et met à jour ces distances en répétant un processus de relaxation c'est à dire 
+vérifier pour chaque sommet si passer par un autre sommet offre un chemin plus court. À chaque mise à jour, on ajuste également 
+les prédécesseurs pour reconstruire le chemin optimale. 
+
+###### Exemple :
+<div style="text-align: center;">
+  <img src="Image/parcours_bellmanFord.jpg" alt="Parcours bellman Ford" style="width: 50%; max-width: 400px;">
+  <p>Figure 3 : parcours bellman-Ford</p>
+</div>
+
+> ##### Parcours avec l’algorithme de Dijkstra
 ###### Explication :
 L'algorithme de Dijkstra est un algorithme utilisé pour trouver les chemins les plus courts entre un sommet de départ et 
 tous les autres sommets d'un graphe pondéré. Il utilise une file de priorité (queue) pour explorer les sommets en fonction 
@@ -156,7 +218,7 @@ optimal en retraçant les prédécesseurs de l'arrivé au départ.
   <p>Figure 4 : parcours dijkstra</p>
 </div>
 
-> ##### #### Parcours avec A*
+> ##### Parcours avec A*
 ###### Explication :
 L’algorithme A* combine une fonction heuristique de Manhattan et un coût de déplacement pour trouver le chemin le plus 
 efficace entre le sommet de départ et le sommet d'arrivé. Il commence par calculer les distances heuristiques de chaque 
@@ -165,13 +227,13 @@ y jusqu’au sommet d'arrivé. L’algorithme maintient une file de priorité (q
 déplacement accumulé + heuristique de manhattan), et explore les voisins accessibles tout en mettant à jour les coûts et 
 les prédécesseurs. Une fois le sommet final atteint, l’algorithme reconstruit le chemin optimal en retraçant les prédécesseurs.
 
-###### Exemple de parcours A* :
+###### Exemple du parcours A* :
 <div style="text-align: center;">
   <img src="Image/parcours_a_etoile.jpg" alt="DParcours A*" style="width: 50%; max-width: 400px;">
   <p>Figure 5 : parcours A*</p>
 </div>
 
-> ##### #### Parcours AllerÀToire
+> ##### Parcours AllerÀToire
 ###### Explication :
 Cet algorithme, nommé **allerAToire** effectue un parcours aléatoire en partant d'un sommet de départ pour atteindre le 
 sommet de fin. Il utilise une file (queue) pour gérer les sommets à explorer et suit deux objectifs principaux : (1) 
@@ -184,4 +246,3 @@ et le chemin parcouru.S'agissant d'un parcours aléatoire, il ne retournera pres
   <img src="Image/parcours_aleatoire.jpg" alt="DParcours aléatoire" style="width: 50%; max-width: 400px;">
   <p>Figure 6 : parcours AllerÀToire</p>
 </div>
-
