@@ -42,3 +42,10 @@
   padding: 20px;
   margin-left: 20px;
 }
+
+img[alt="Image de chiffre deux"] {
+    width: 20%;
+    height: auto;
+    display: block;
+    margin: 10px auto;
+}
