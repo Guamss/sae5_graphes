@@ -327,56 +327,64 @@ class Grille:
 
         return reachable, path
 
-    def bellman_ford(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
-        # Initialisation des distances avec l'infini (sys.maxsize)
-        distances = {sommet: sys.maxsize for ligne in self.tab for sommet in ligne}
-        predecessors: dict[Sommet, Union[Sommet, None]] = {sommet: None for ligne in self.tab for sommet in ligne}  # Dictionnaire des prédécesseurs
-        next_nodes = {}  # Dictionnaire des voisins sélectionnés, construit dynamiquement dans l'ordre des visites
+    def bellman_ford(self, start: Sommet, end: Sommet) -> tuple[
+        dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
+        """
+        Implémentation de l'algorithme de Bellman-Ford.
 
+        Args:
+            start (Sommet): le sommet de départ
+            end (Sommet): le sommet de fin
+
+        Returns:
+            tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
+                - Le premier dictionnaire contient les sommets et leurs voisins atteignables sous forme d'ensemble,
+                  dans l'ordre des sommets visités.
+                - Le deuxième dictionnaire contient les prédécesseurs pour reconstruire le chemin le plus court.
+        """
+        # Initialisation des distances et des prédécesseurs
+        distances = {sommet: float('inf') for ligne in self.tab for sommet in ligne}
         distances[start] = 0
-        visited_order = []  # Liste pour suivre l'ordre des visites des sommets
+        predecessors = {sommet: None for ligne in self.tab for sommet in ligne}
 
-        # Pour chaque sommet, on met à jour les distances en fonction des voisins
-        for _ in range(len(self.tab) * len(self.tab[0]) - 1):  # Pas besoin de vérifier après len(grille) - 1 itérations
+        # Liste pour maintenir l'ordre des sommets visités
+        visited_order = []
+
+        # Première partie : relaxation des arêtes
+        for _ in range(self.width * self.height - 1):  # |V| - 1 itérations
             for ligne in self.tab:
                 for sommet in ligne:
-                    for voisin in self.get_neighbors(sommet):
-                        # Mise à jour des distances si un chemin plus court est trouvé
-                        if distances[voisin] > distances[sommet] + voisin.weight:
-                            distances[voisin] = distances[sommet] + voisin.weight
-                            predecessors[voisin] = sommet
+                    for neighbor in self.get_neighbors(sommet):
+                        if sommet.weight != self.WALL and neighbor.weight != self.WALL:
+                            new_distance = distances[sommet] + neighbor.weight
+                            if new_distance < distances[neighbor]:
+                                distances[neighbor] = new_distance
+                                predecessors[neighbor] = sommet
+                                # Ajouter le voisin à l'ordre des visites si ce n'est pas déjà fait
+                                if neighbor not in visited_order:
+                                    visited_order.append(neighbor)
 
-                            # Ajout au dictionnaire dans l'ordre de traitement
-                            if sommet not in next_nodes:
-                                next_nodes[sommet] = set()
-                                visited_order.append(sommet)  # Ajouter le sommet à la liste d'ordre
-                            next_nodes[sommet].add(voisin)
+        # Reconstruction des chemins dans l'ordre des visites
+        reachable = {}
+        for sommet in visited_order:
+            pred = predecessors[sommet]
+            if pred:
+                if pred in reachable:
+                    reachable[pred].add(sommet)
+                else:
+                    reachable[pred] = {sommet}
 
-        # Vérification des cycles négatifs (optionnel selon le contexte)
-        for ligne in self.tab:
-            for sommet in ligne:
-                for voisin in self.get_neighbors(sommet):
-                    if distances[voisin] > distances[sommet] + voisin.weight:
-                        raise ValueError("Le graphe contient un cycle négatif")
-
-        # Construction du dictionnaire des chemins optimaux (chemin le plus rapide)
-        shortest_path_dict = {}
+        # Chemin le plus court
+        shortest_path = {}
         current = end
-        while current is not None and predecessors[current] is not None:
-            shortest_path_dict[current] = predecessors[current]
+        while current != start and predecessors[current] is not None:
+            shortest_path[predecessors[current]] = current
             current = predecessors[current]
 
-        shortest_path_dict = {v: k for k, v in reversed(list(shortest_path_dict.items()))}
-
-        # Si le sommet 'end' est encore inatteignable, lever une exception
-        if distances[end] == sys.maxsize:
+        if current != start:
             raise NotConnectedGraphException()
 
-        # Réorganisation finale de `next_nodes` selon l'ordre de visite
-        ordered_next_nodes = {sommet: next_nodes[sommet] for sommet in visited_order}
-
-        # Retourner les deux dictionnaires dans un tuple
-        return ordered_next_nodes, shortest_path_dict
+        return reachable, shortest_path
 
     def heuristique_manhattan(self, end: Sommet) -> dict[Sommet:int]:
         distance_heuristique = {}
