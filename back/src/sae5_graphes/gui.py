@@ -20,7 +20,7 @@ class ColorHexagon:
         self.x = x  # Longueur x
         self.y = y  # Largeur y
         self.length = length  # Taille
-        self.color = color  # Type la case (black,white...)
+        self.color = color
         self.id = id  # Format Colonne - Ligne
         self.selected = False
 
@@ -49,6 +49,15 @@ class ColorHexagon:
 
 class App(Tk):
     def __init__(self, num_cols, num_rows, window_height, window_width):
+        """
+        Initialise l'application avec une grille d'hexagones.
+
+        Args:
+            num_cols (int): Le nombre de colonnes d'hexagones.
+            num_rows (int): Le nombre de lignes d'hexagones.
+            window_height (int): Hauteur de la fenêtre.
+            window_width (int): Largeur de la fenêtre.
+        """
         super().__init__()
         self.scale_widget = None
         self.title("Hexagones")
@@ -63,20 +72,18 @@ class App(Tk):
         self.hex_width = self.hex_size * 1.5  # Largeur d'un hexagone
         self.hex_height = self.hex_size * sqrt(3)  # Hauteur d'un hexagone
 
-        # Crée un canevas pour afficher les hexagones
         self.canvas = Canvas(self,
                              width=self.hex_width * self.num_cols + self.hex_width / 2,
                              height=self.hex_height * self.num_rows + self.hex_height,
                              bg=BLACK)
         self.canvas.grid(row=1, column=1, columnspan=8, rowspan=7)
 
-        self.selected_color = BLACK  # Couleur sélectionnée par défaut pour dessiner
+        self.selected_color = BLACK
 
-        # Liaisons des événements
         self.bind("<Configure>", self.on_resize)
         self.resize_id = None
         self.canvas.bind("<Button-1>", self.click)  # Clic simple
-        self.canvas.bind("<B1-Motion>", self.drag)  # Dragging avec le clic gauche
+        self.canvas.bind("<B1-Motion>", self.drag)  # Drag
 
         self.is_stopped_button_pressed = False
         self.sum_weight = 0
@@ -93,7 +100,6 @@ class App(Tk):
 
         self.create_elements()
 
-        # Création de la grille d'hexagones
         self.hexagons = {}
         self.init_grid(self.num_cols, self.num_rows, self.hex_size)
 
@@ -135,7 +141,6 @@ class App(Tk):
         self.scale_widget.pack(side="top", pady=5)
         Label(frame_config_algo_exec, text="Vitesse d'exécution (en ms)").pack(side="top", pady=5)
 
-        # Boutons couleurs
         Button(self, text="Mur", bg=BLACK, fg=WHITE, command=lambda: self.set_color(BLACK)).grid(row=1, column=0,
                                                                                                  padx=5, pady=5,
                                                                                                  sticky="news")
@@ -168,7 +173,12 @@ class App(Tk):
 
     def init_grid(self, cols, rows, size):
         """
-        Initialise une grille 2D d'hexagones, un départ et un objectif
+        Initialise une grille 2D d'hexagones, un départ et un objectif.
+
+        Args:
+            cols (int): Le nombre de colonnes d'hexagones.
+            rows (int): Le nombre de lignes d'hexagones.
+            size (float): La taille des hexagones.
         """
         old_selected = self.selected_color
         self.selected_color = None
@@ -201,26 +211,48 @@ class App(Tk):
         self.selected_color = old_selected
 
     def set_color(self, color):
+        """
+        Définit la couleur sélectionnée pour colorier un hexagone.
+
+        Args:
+            color (str): La couleur à appliquer.
+        """
         self.selected_color = color
 
     def stop_algo_exec(self):
+        """
+        Arrête l'exécution de l'algorithme en cours.
+        """
         self.is_stopped_button_pressed = True
 
     def click(self, evt):
         """
-        Gère le clic simple pour colorier les hexagones
+        Gère le clic simple pour colorier les hexagones.
+
+        Args:
+            evt (Event): L'événement de clic.
         """
         self.paint_hexagon_on_click(evt.x, evt.y)
 
     def drag(self, evt):
         """
-        Gère le drag pour colorier plusieurs hexagones
+        Gère le drag pour colorier plusieurs hexagones.
+
+        Args:
+            evt (Event): L'événement de drag.
         """
         self.paint_hexagon_on_click(evt.x, evt.y)
 
     def get_hexagon_center(self, x, y):
         """
         Calcule le centre d'un hexagone en fonction de ses coordonnées (colonne, ligne).
+
+        Args:
+            x (int): La colonne de l'hexagone.
+            y (int): La ligne de l'hexagone.
+
+        Returns:
+            tuple: Un tuple (x, y) représentant le centre de l'hexagone.
         """
         offset = self.hex_size * sqrt(3) / 2 if y % 2 else 0
         center_x = y * self.hex_width + self.hex_width + self.hex_height / 3
@@ -230,6 +262,11 @@ class App(Tk):
     def paint_path(self, start, end, color):
         """
         Dessine une flèche entre deux hexagones, avec une tendance visuelle en fonction de la disposition hexagonale.
+
+        Args:
+            start (Sommet): Le sommet de départ.
+            end (Sommet): Le sommet de fin.
+            color (str): La couleur de la flèche.
         """
         start_x, start_y = self.get_hexagon_center(start.x, start.y)
         end_x, end_y = self.get_hexagon_center(end.x, end.y)
@@ -240,6 +277,14 @@ class App(Tk):
         ))
 
     def paint_hexagon(self, col: int, row: int, color: str):
+        """
+        Colorie un hexagone avec la couleur spécifiée.
+
+        Args:
+            col (int): La colonne de l'hexagone.
+            row (int): La ligne de l'hexagone.
+            color (str): La couleur à appliquer.
+        """
         hexagon = self.hexagons.get(f"{col}-{row}")
 
         if color in [PURPLE, RED]:  # Départ ou arrivée
@@ -266,12 +311,21 @@ class App(Tk):
         self.canvas.itemconfigure(hexagon.id, fill=color)
 
     def on_resize(self, event):
+        """
+        Gère le redimensionnement de la fenêtre.
+
+        Args:
+            event (Event): L'événement de redimensionnement.
+        """
         if self.resize_id is not None:
             self.after_cancel(self.resize_id)
 
         self.resize_id = self.after(300, self.on_resize_released)
 
     def on_resize_released(self):
+        """
+        Recalcule les dimensions de la grille après un redimensionnement de la fenêtre.
+        """
         height = self.winfo_height()
 
         width = self.winfo_width()
@@ -299,14 +353,18 @@ class App(Tk):
 
     def paint_hexagon_on_click(self, x, y):
         """
-        Colorie un hexagone en fonction des coordonnées (x, y)
+        Colorie un hexagone en fonction des coordonnées (x, y) après un clic.
+
+        Args:
+            x (int): La position X du clic.
+            y (int): La position Y du clic.
         """
         closest = self.canvas.find_closest(x, y)
         if closest:
             tags = self.canvas.gettags(closest[0])
             if tags:
-                hex_id = tags[0]  # Le premier tag correspond à l'ID de l'hexagone
-                hexagon = self.hexagons.get(hex_id)  # Récupère l'hexagone correspondant
+                hex_id = tags[0]
+                hexagon = self.hexagons.get(hex_id)
                 if hexagon:
 
                     col, row = map(int, hex_id.split("-"))
@@ -316,12 +374,18 @@ class App(Tk):
                         self.paint_hexagon(col, row, color)
 
     def unique_color_replace(self):
+        """
+        Remplace la couleur sélectionnée par défaut (blanc) dans toute la grille.
+        """
         for hexagon in self.hexagons.values():
             if hexagon.color == self.selected_color:
                 hexagon.color = WHITE
                 self.canvas.itemconfigure(hexagon.id, fill=WHITE)
 
     def clear_arrows(self):
+        """
+        Efface toutes les flèches (chemins) affichées sur le canevas.
+        """
         self.sum_weight = 0
         for arrow in self.paths:
             self.canvas.delete(arrow)
@@ -330,7 +394,7 @@ class App(Tk):
 
     def clear_all(self):
         """
-        Réinitialise tous les hexagones à blanc
+        Réinitialise tous les hexagones à blanc.
         """
         for hexagon in self.hexagons.values():
             y, x = map(int, hexagon.id.split("-"))
@@ -341,17 +405,23 @@ class App(Tk):
         self.clear_arrows()
         self.chemins = None
 
-    def clear_results(self):
-        """
-        Efface les résultats spécifiques (si nécessaire)
-        """
-        pass
-
     def is_sommet_start_or_end(self, sommet: Sommet):
+        """
+        Vérifie si un sommet est le point de départ ou d'arrivée.
+
+        Args:
+            sommet (Sommet): Le sommet à vérifier.
+
+        Returns:
+            bool: Retourne True si c'est le sommet de départ ou d'arrivée, sinon False.
+        """
         return (self.start.x == sommet.x and self.start.y == sommet.y) or (
                 self.end.x == sommet.x and self.end.y == sommet.y)
 
     def weight_popup(self):
+        """
+        Affiche une fenêtre popup avec la distance parcourue par le chemin rouge.
+        """
         if self.sum_weight > 0:
             messagebox.showinfo("Distance parourue", f"La distance parcourue par le chemin rouge : {self.sum_weight}")
         else:
@@ -359,7 +429,7 @@ class App(Tk):
 
     def random_colors(self):
         """
-        Applique des couleurs aléatoires aux hexagones
+        Applique des couleurs aléatoires aux hexagones de la grille.
         """
         colors = [BLACK, WHITE, BLUE, GREEN, YELLOW]
         for hex_id, hexagon in self.hexagons.items():
@@ -372,17 +442,21 @@ class App(Tk):
                     self.update()
 
     def init_hexagones(self):
-        # Initialisation du départ en bas à gauche
+        """
+        Initialise le départ en bas à gauche et l'objectif en haut à droite.
+        """
         startHexagon = self.hexagons.get(f"{self.num_cols - 1}-{0}")
         startHexagon.color = PURPLE
         self.canvas.itemconfigure(startHexagon.id, fill=PURPLE)
 
-        # Initialisation de l'objectif en haut à droite
         endHexagon = self.hexagons.get(f"{0}-{self.num_rows - 1}")
         endHexagon.color = RED
         self.canvas.itemconfigure(endHexagon.id, fill=RED)
 
     def a_star(self):
+        """
+        Lance l'algorithme A* pour trouver le chemin optimal entre le départ et l'objectif.
+        """
         self.clear_arrows()
         self.grille.init_grid()
         try:
@@ -392,6 +466,9 @@ class App(Tk):
             print(e.message)
 
     def launch_parcours_en_largeur(self):
+        """
+        Lance l'algorithme de parcours en largeur.
+        """
         self.is_stopped_button_pressed = False
         self.clear_arrows()
         self.grille.init_grid()
@@ -402,6 +479,9 @@ class App(Tk):
             self.alert_popup(e.message)
 
     def launch_parcours_en_profondeur(self):
+        """
+        Lance l'algorithme de parcours en profondeur.
+        """
         self.is_stopped_button_pressed = False
         self.clear_arrows()
         self.grille.init_grid()
@@ -412,6 +492,9 @@ class App(Tk):
             self.alert_popup(e.message)
 
     def launch_allerAToire(self):
+        """
+        Lance l'algorithme AllerÀToire.
+        """
         self.is_stopped_button_pressed = False
         self.clear_arrows()
         self.grille.init_grid()
@@ -422,6 +505,9 @@ class App(Tk):
             self.alert_popup(e.message)
 
     def launch_dijkstra(self):
+        """
+        Lance l'algorithme de Dijkstra pour trouver le chemin optimal entre le départ et l'objectif.
+        """
         self.is_stopped_button_pressed = False
         self.clear_arrows()
         self.grille.init_grid()
@@ -432,6 +518,9 @@ class App(Tk):
             self.alert_popup(e.message)
 
     def launch_bellman_ford(self):
+        """
+        Lance l'algorithme de Bellman-Ford pour trouver le chemin optimal entre le départ et l'objectif.
+        """
         self.is_stopped_button_pressed = False
         self.clear_arrows()
         self.grille.init_grid()
@@ -442,9 +531,22 @@ class App(Tk):
             self.alert_popup(e.message)
 
     def alert_popup(self, text):
+        """
+        Affiche une popup d'erreur avec le message spécifié.
+
+        Args:
+            text (str): Le message d'erreur à afficher.
+        """
         messagebox.showerror("Erreur d'exécution", text)
 
     def _display_results(self, chemins, start):
+        """
+        Affiche les résultats d'un algorithme sous forme de flèches.
+
+        Args:
+            chemins (list): La liste des chemins calculés par l'algorithme.
+            start (Sommet): Le sommet de départ.
+        """
         self.chemins = chemins[:]
         disp_queue = []
         for sommet in chemins[0].keys():
@@ -453,6 +555,14 @@ class App(Tk):
         self._progressive_display_all(disp_queue, chemins, start)
 
     def _progressive_display_all(self, chemin: list[tuple], chemins, start):
+        """
+        Affiche progressivement les chemins entre les sommets.
+
+        Args:
+            chemin (list[tuple]): La liste des arêtes à afficher.
+            chemins (dict): Dictionnaire des chemins.
+            start (Sommet): Le sommet de départ.
+        """
         if len(chemin) > 0 and not self.is_stopped_button_pressed:
             sommet, suivant = chemin.pop(0)
             self.paint_path(sommet, suivant, "#757575")
@@ -461,6 +571,13 @@ class App(Tk):
             self._progressive_display_best(chemins[1], start)
 
     def _progressive_display_best(self, chemin, sommet):
+        """
+        Affiche progressivement le meilleur chemin.
+
+        Args:
+            chemin (dict): Le dictionnaire représentant le chemin optimal.
+            sommet (Sommet): Le sommet actuel.
+        """
         if sommet in chemin.keys() and not self.is_stopped_button_pressed:
             self.sum_weight += sommet.weight
             suivant = chemin[sommet]

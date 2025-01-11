@@ -5,59 +5,88 @@ import random
 
 
 class Sommet:
+    """
+    Représente un sommet dans un graphe, avec un poids et des coordonnées dans un espace 2D.
+
+    Attributes:
+        weight (int): Le poids du sommet dans le graphe.
+        x (int): La coordonnée en abscisse (ligne).
+        y (int): La coordonnée en ordonnée (colonne).
+        visited (bool): Indicateur si le sommet a été visité lors d'une recherche.
+
+    Args:
+        weight (int): Le poids du sommet.
+        x (int): Coordonnée x (ligne).
+        y (int): Coordonnée y (colonne).
+    """
+
     def __init__(self, weight: int, x: int, y: int) -> None:
-        """
-        Le sommet d'un graphe
-
-        Args:
-            weight (int): le poids du sommet dans le graphe
-            x (int): les coordonnées du sommet en abscisse
-            y (int): les coordonnées du sommet en ordonnée
-
-        Fields:
-            weight (int): le poids du sommet dans le graphe
-            x (int): les coordonnées du sommet en abscisse
-            y (int): les coordonnées du sommet en ordonnée
-            visited (bool): si le sommet a déjà été visité
-        """
         self.weight: int = weight
         self.x: int = x  # La ligne
         self.y: int = y  # La colonne
         self.visited = False
 
     def __eq__(self, other: object) -> bool:
+        """
+        Compare deux sommets pour savoir s'ils ont les mêmes coordonnées.
+
+        Args:
+            other (object): L'autre objet à comparer.
+
+        Returns:
+            bool: True si les coordonnées (x, y) sont identiques, sinon False.
+        """
         if not isinstance(other, Sommet):
             return False
         return self.x == other.x and self.y == other.y
 
     def __hash__(self) -> int:
-        return hash((self.x, self.y))  # Utilise les coordonnées pour générer un hash unique
+        """
+        Retourne un hash basé sur les coordonnées du sommet.
+
+        Returns:
+            int: Le hash du sommet.
+        """
+        return hash((self.x, self.y))
 
     def __str__(self) -> str:
+        """
+        Retourne une représentation sous forme de chaîne de caractères du sommet.
+
+        Returns:
+            str: Représentation du sommet.
+        """
         return f"{self.weight} | [{self.x}, {self.y}]"
 
     def __repr__(self) -> str:
+        """
+        Retourne une représentation officielle du sommet.
+
+        Returns:
+            str: Représentation officielle du sommet.
+        """
         return f"({self.x}, {self.y})"
 
 
 class Grille:
     """
-        Une grille de sommets
+    Représente une grille de sommets organisés dans un tableau 2D, utilisée pour effectuer des algorithmes de recherche de chemin.
 
-        Args:
-            height (int): hauteur de la grille
-            width (int): largeur de la grille
+    Attributes:
+        height (int): La hauteur de la grille (nombre de lignes).
+        width (int): La largeur de la grille (nombre de colonnes).
+        tab (list[list[Sommet]]): Un tableau 2D contenant les sommets de la grille.
+        WALL (int): Valeur représentant un mur dans la grille.
 
-        Fields:
-            height (int): hauteur de la grille
-            width (int): largeur de la grille
-            tab (list[list[Sommet]]): tableau 2D des sommets potentiel du graphe
+    Args:
+        height (int): Hauteur de la grille.
+        width (int): Largeur de la grille.
     """
 
     def __init__(self, height: int, width: int) -> None:
         self.height: int = height
         self.width: int = width
-        self.WALL: int = 10000 # on prend un entier très grand pour définir ce qu'est un mur
+        self.WALL: int = 10000  # Un très grand nombre représentant un mur.
         self.tab: list[list[Sommet]] = \
             [[Sommet(1, x, y) for y in range(height)] for x in range(width)]
 
@@ -68,26 +97,30 @@ class Grille:
         return out
 
     def init_grid(self):
+        """
+        Réinitialise la grille en marquant tous les sommets comme non visités.
+        Cette méthode permet de préparer la grille pour une nouvelle exécution d'algorithmes de recherche.
+        """
         for i in range(len(self.tab)):
             for j in range(len(self.tab[i])):
                 self.tab[i][j].visited = False
 
     def get_neighbors(self, s: Sommet) -> set[Sommet]:
         """
-        Renvoie les voisins du sommet s
+        Retourne les voisins d'un sommet donné.
 
-        Args :
-            s (Sommet) : le sommet concerné
+        Args:
+            s (Sommet): Le sommet pour lequel obtenir les voisins.
 
-        Returns :
-            list[Sommet] : les voisins du sommet s
+        Returns:
+            set[Sommet]: Un ensemble de voisins du sommet s.
         """
         neighbors: set[Sommet] = set()
         for i in range(s.x - 1, s.x + 2):
             for j in range(s.y - 1, s.y + 2):
                 if 0 <= i < self.width and 0 <= j < self.height and (i != s.x or j != s.y):  # in Grille && !current
                     if i != s.x and j != s.y:  # Une case angle
-                        if s.y % 2:  # Colone
+                        if s.y % 2:  # Colone impaire
                             if i == s.x + 1:
                                 neighbors.add(self.tab[i][j])
                         else:  # Colone paire
@@ -100,34 +133,37 @@ class Grille:
 
     def get_nbr_wall(self) -> int:
         """
-        Calcule le nombre de
-        :return: le nombre total de mur dans la grille
+        Calcule et retourne le nombre total de murs dans la grille.
+
+        Returns:
+            int: Le nombre total de murs.
         """
         nbr_wall: int = 0
         for ligne in self.tab:  # Parcourt chaque ligne (liste de sommets)
             for sommet in ligne:  # Parcourt chaque sommet de la ligne
                 if sommet.weight == self.WALL:
-                    nbr_wall+=1
+                    nbr_wall += 1
         return nbr_wall
-
     def parcours_profondeur(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         """
-        Le parcours en profondeur va parcourir le graphe jusqu'à trouver une impasse (sommet sans voisin) et ensuite
-        revenir en arrière afin de retrouver un voisin non visité. Cette application est faites récursivement
+        Effectue un parcours en profondeur du graphe pour trouver un chemin entre le sommet de départ et d'arrivée.
+        Cette méthode parcourt récursivement le graphe et backtrack lorsqu'elle atteint une impasse.
 
-        :param start: sommet de départ
-        :param end: sommet d'arrivée
-        :return: liste des chemins possible
+        Args:
+            start (Sommet): Le sommet de départ.
+            end (Sommet): Le sommet d'arrivée.
+
+        Returns:
+            tuple: Un tuple contenant deux dictionnaires :
+                - Le premier dictionnaire contient les sommets visités et leurs voisins.
+                - Le second dictionnaire contient les prédécesseurs pour chaque sommet sur le chemin.
         """
-        # Parcours en profondeur
         visited = {}
         self.parcours_profondeur_recursive(start, end, visited)
 
-        # Le cas où le graphe n'est pas connexe
         if len(visited) != (self.height * self.width) - self.get_nbr_wall() and end not in visited:
             raise NotConnectedGraphException()
 
-        # Solution
         solution: dict[Sommet, Sommet] = {}
         courant = end
         antecedent = None
@@ -141,6 +177,17 @@ class Grille:
         return visited, solution
 
     def parcours_profondeur_recursive(self, s: Sommet, end: Sommet, visited: dict[Sommet, set[Sommet]], ):
+        """
+        Méthode récursive pour le parcours en profondeur.
+
+        Args:
+            s (Sommet): Le sommet actuellement exploré.
+            end (Sommet): Le sommet de fin.
+            visited (dict): Dictionnaire des sommets visités et leurs voisins.
+
+        Returns:
+            bool: Retourne True si un chemin vers le sommet d'arrivée a été trouvé, sinon False.
+        """
         s.visited = True
         if s not in visited:
             visited[s] = set()
@@ -153,6 +200,18 @@ class Grille:
         return False
 
     def parcours_dijkstra(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
+        """
+        Implémente l'algorithme de Dijkstra pour trouver le chemin le plus court entre deux sommets.
+
+        Args:
+            start (Sommet): Le sommet de départ.
+            end (Sommet): Le sommet d'arrivée.
+
+        Returns:
+            tuple: Un tuple contenant deux dictionnaires :
+                - Le premier dictionnaire contient tous les résultats intermédiaires des sommets visités.
+                - Le second dictionnaire contient le chemin le plus court du sommet de départ au sommet d'arrivée.
+        """
         queue: list[tuple[Sommet, int, Union[Sommet, None]]] = [(start, 0, start)]
         visited: list[tuple[Sommet, int, Union[Sommet, None]]] = []
 
@@ -205,6 +264,15 @@ class Grille:
 
     @staticmethod
     def get_all_result_dict(visited: list[tuple[Sommet, int, Union[Sommet, None]]]) -> dict[Sommet, set[Sommet]]:
+        """
+        Génère un dictionnaire des résultats de tous les sommets visités, associant chaque sommet à ses voisins.
+
+        Args:
+            visited (list): Liste des tuples contenant le sommet, la distance et son prédécesseur.
+
+        Returns:
+            dict: Un dictionnaire où chaque clé est un sommet et chaque valeur est un ensemble de ses voisins.
+        """
         result: dict[Sommet, set[Sommet]] = {}
         for t in visited:
             if t[0] != t[2]:
@@ -217,15 +285,16 @@ class Grille:
 
     def parcours_largeur(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         """
-        Vérifie si la grille est connexe jusqu'à l'arrivée. Si c'est le cas prend le chemin le plus court, sinon
-        relève une NotConnectedGraphException.
+        Implémente l'algorithme de parcours en largeur pour trouver le chemin le plus court entre deux sommets.
 
         Args:
-            start (Sommet): le sommet de départ
-            end (Sommet): le sommet de fin
+            start (Sommet): Le sommet de départ.
+            end (Sommet): Le sommet d'arrivée.
 
         Returns:
-            dict[Sommet, set[Sommet]]: jsp
+            tuple: Un tuple contenant deux dictionnaires :
+                - Le premier dictionnaire contient les sommets visités et leurs voisins atteignables.
+                - Le second dictionnaire contient les prédécesseurs pour chaque sommet sur le chemin.
         """
         queue: list[tuple[Sommet, int, Union[Sommet, None]]] = [(start, 0, start)]
         visited: list[tuple[Sommet, int, Union[Sommet, None]]] = []
@@ -275,27 +344,27 @@ class Grille:
         for i in range(len(result) - 1):
             dico_result[result[i]] = result[i + 1]
 
-        return dico_all_result, dico_result # ca pue du cul
+        return dico_all_result, dico_result
 
     def allerAToire(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         """
-        Parcourt la grille de manière aléatoire de start à end.
+        Effectue un parcours aléatoire de la grille de start à end, en choisissant des voisins au hasard.
 
         Args:
-            start (Sommet): le sommet de départ
-            end (Sommet): le sommet de fin
+            start (Sommet): Le sommet de départ.
+            end (Sommet): Le sommet d'arrivée.
 
         Returns:
-            tuple[dict[Sommet, set[Sommet]], dict[tuple[int, int], tuple[int, int]]]:
-            - Le premier dictionnaire contient les sommets et leurs voisins atteignables sous forme d'ensemble.
-            - Le deuxième dictionnaire contient les coordonnées du chemin parcouru.
+            tuple: Un tuple contenant :
+                - Le premier dictionnaire contient les sommets et leurs voisins atteignables.
+                - Le second dictionnaire contient les prédécesseurs pour reconstruire le chemin parcouru.
         """
         queue: list[Sommet] = [start]
         reachable: dict[Sommet, set[Sommet]] = {start: set()}
         path: dict[Sommet, Sommet] = dict()
-        visited: set[Sommet] = set()  # Ensemble des sommets visités
-        known: set[Sommet] = set()  # Ensemble des sommets connus
-        end_reached: bool = False  # Drapeau pour indiquer si la fin est atteinte
+        visited: set[Sommet] = set()
+        known: set[Sommet] = set()
+        end_reached: bool = False
 
         while queue and not end_reached:
             current = queue.pop()
@@ -330,28 +399,24 @@ class Grille:
     def bellman_ford(self, start: Sommet, end: Sommet) -> tuple[
         dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
         """
-        Implémentation de l'algorithme de Bellman-Ford.
+        Implémente l'algorithme de Bellman-Ford pour déterminer les chemins les plus courts à partir d'un sommet source.
 
         Args:
-            start (Sommet): le sommet de départ
-            end (Sommet): le sommet de fin
+            start (Sommet): Le sommet de départ.
+            end (Sommet): Le sommet d'arrivée.
 
         Returns:
-            tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
-                - Le premier dictionnaire contient les sommets et leurs voisins atteignables sous forme d'ensemble,
-                  dans l'ordre des sommets visités.
-                - Le deuxième dictionnaire contient les prédécesseurs pour reconstruire le chemin le plus court.
+            tuple: Un tuple contenant deux dictionnaires :
+                - Le premier dictionnaire contient les sommets et leurs voisins atteignables.
+                - Le second dictionnaire contient les prédécesseurs pour reconstruire le chemin le plus court.
         """
-        # Initialisation des distances et des prédécesseurs
         distances = {sommet: float('inf') for ligne in self.tab for sommet in ligne}
         distances[start] = 0
         predecessors = {sommet: None for ligne in self.tab for sommet in ligne}
 
-        # Liste pour maintenir l'ordre des sommets visités
         visited_order = []
 
-        # Première partie : relaxation des arêtes
-        for _ in range(self.width * self.height - 1):  # |V| - 1 itérations
+        for _ in range(self.width * self.height - 1):
             for ligne in self.tab:
                 for sommet in ligne:
                     for neighbor in self.get_neighbors(sommet):
@@ -360,11 +425,9 @@ class Grille:
                             if new_distance < distances[neighbor]:
                                 distances[neighbor] = new_distance
                                 predecessors[neighbor] = sommet
-                                # Ajouter le voisin à l'ordre des visites si ce n'est pas déjà fait
                                 if neighbor not in visited_order:
                                     visited_order.append(neighbor)
 
-        # Reconstruction des chemins dans l'ordre des visites
         reachable = {}
         for sommet in visited_order:
             pred = predecessors[sommet]
@@ -374,7 +437,6 @@ class Grille:
                 else:
                     reachable[pred] = {sommet}
 
-        # Chemin le plus court
         shortest_path = {}
         current = end
         while current != start and predecessors[current] is not None:
@@ -387,6 +449,15 @@ class Grille:
         return reachable, shortest_path
 
     def heuristique_manhattan(self, end: Sommet) -> dict[Sommet:int]:
+        """
+        Calcule la distance heuristique de Manhattan entre chaque sommet de la grille et le sommet d'arrivée.
+
+        Args:
+            end (Sommet): Le sommet d'arrivée.
+
+        Returns:
+            dict: Un dictionnaire où chaque clé est un sommet et la valeur est sa distance heuristique vers l'arrivée.
+        """
         distance_heuristique = {}
         for ligne in self.tab:
             for sommet in ligne:
@@ -396,6 +467,18 @@ class Grille:
         return distance_heuristique
 
     def a_star(self, start: Sommet, end: Sommet) -> tuple[dict[Sommet, set[Sommet]], dict[Sommet, Sommet]]:
+        """
+        Implémente l'algorithme A* pour trouver le chemin le plus court entre deux sommets, en utilisant une heuristique de Manhattan.
+
+        Args:
+            start (Sommet): Le sommet de départ.
+            end (Sommet): Le sommet d'arrivée.
+
+        Returns:
+            tuple: Un tuple contenant deux dictionnaires :
+                - Le premier dictionnaire contient les sommets visités et leurs voisins atteignables.
+                - Le second dictionnaire contient les prédécesseurs pour reconstruire le chemin le plus court.
+        """
         heuristique_manhattan = self.heuristique_manhattan(end)  # Valeur heuriqtique de chaque sommet
         cout_deplacement: dict[Sommet: int] = {start: 0}
         cout_acces_total: dict[Sommet: int] = {
@@ -421,7 +504,6 @@ class Grille:
                 cout_acces_total[voisin] = heuristique_manhattan[voisin] + cout_deplacement[voisin]
                 queue.append((voisin, cout_acces_total[voisin]))
                 queue.sort(key=lambda x: x[1])
-            # Si la fil d'attente est vide c'est forcemment que le sommet de depart et d'arrivé ne sont pas dans le même graphe
             if len(queue) == 0:
                 raise NotConnectedGraphException()
             courant = queue.pop(0)[0]
