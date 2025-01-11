@@ -1,6 +1,6 @@
 import sys
 from typing import Union
-from exceptions import *
+from .exceptions import *
 import random
 
 class Sommet:
