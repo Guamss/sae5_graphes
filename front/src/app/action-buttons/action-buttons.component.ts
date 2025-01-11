@@ -20,7 +20,8 @@ export class ActionButtonsComponent {
     visited: Map<[number, number], [number, number]> = new Map();
     solution: Map<[number, number], [number, number]> = new Map();
 
-    constructor(private gridService: GridService) {}
+    constructor(private gridService: GridService) {
+    }
 
     parseData(jsonData: any) {
         // Créer une map pour visited et solution
@@ -95,12 +96,14 @@ export class ActionButtonsComponent {
     generateGrid(): void {
         this.gridService.getGridWeights().subscribe({
             next: (weights) => {
+                const resetWeights = weights.map(row => row.map(() => 1));
+
                 this.grid = {
-                    height: weights.length,
-                    width: weights[0]?.length || 0,
-                    start: [weights[0]?.length - 1, 0], // Point d'arrivée par défaut
-                    end: [0, weights.length - 1], // Point de départ par défaut
-                    tab: weights
+                    height: resetWeights.length,
+                    width: resetWeights[0]?.length || 0,
+                    start: [resetWeights[0]?.length - 1, 0], // Point d'arrivée par défaut
+                    end: [0, resetWeights.length - 1], // Point de départ par défaut
+                    tab: resetWeights
                 };
                 this.gridChange.emit(this.grid);
             },
@@ -158,7 +161,7 @@ export class ActionButtonsComponent {
                     this.visitedChange.emit(this.visited);
                     this.solutionChange.emit(this.solution);
                     this.sumWeightChange.emit(this.sumWeight);
-                },                error: (err) => console.error('Erreur lors de l\'exécution de Bellman-Ford:', err)
+                }, error: (err) => console.error('Erreur lors de l\'exécution de Bellman-Ford:', err)
             });
         }
     }
@@ -189,7 +192,7 @@ export class ActionButtonsComponent {
                     this.visitedChange.emit(this.visited);
                     this.solutionChange.emit(this.solution);
                     this.sumWeightChange.emit(this.sumWeight);
-                },                error: (err) => console.error('Erreur lors de l\'exécution de A*:', err)
+                }, error: (err) => console.error('Erreur lors de l\'exécution de A*:', err)
             });
         }
     }
@@ -204,7 +207,7 @@ export class ActionButtonsComponent {
                     this.visitedChange.emit(this.visited);
                     this.solutionChange.emit(this.solution);
                     this.sumWeightChange.emit(this.sumWeight);
-                },                error: (err) => console.error('Erreur lors de l\'exécution de Random Walk:', err)
+                }, error: (err) => console.error('Erreur lors de l\'exécution de Random Walk:', err)
             });
         }
     }
