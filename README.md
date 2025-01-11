@@ -36,6 +36,7 @@ interactive et intuitive.
   - AllerÀToire
 
 > ##### Installation et configuration
+A compléter...
 Python, nodejs, docker
 librairie utilisé : tkinter, random, math
 
@@ -89,9 +90,10 @@ algorithmes offre une approche unique pour explorer ou trouver des chemins dans 
 des applications distinctes.
 
 ```
-⚠️ Si le sommet de destination n'est pas atteignable car le sommet de départ et d'arrivé ne sont pas dans le même 
-graphe, une exception est levée. Mais si le graphe n'est pas connexe et que le sommet de départ et d'arrivé sont dans le 
-même graphe, le parcours se réalise en prenant en compte uniquement le graphe où se trouve le sommet de départ et d'arrivé.
+⚠️ Si le sommet de destination n'est pas atteignable car le sommet de départ et d'arrivé ne sont pas dans la même 
+composante connexe, une exception est levée. Mais si le graphe n'est pas connexe et que le sommet de départ et d'arrivé sont dans la 
+même composante connexe, le parcours se réalise en prenant en compte uniquement la composante connexe où se trouve le sommet 
+de départ et d'arrivé.
 ```
 
 > ##### #### Parcours en profondeur
@@ -100,17 +102,40 @@ Le parcours en profondeur est une méthode classique utilisée pour explorer un 
 Elle fonctionne en partant d’un sommet de départ et en explorant autant que possible chaque chemin avant de revenir en 
 arrière lorsque l'on atteint une impasse (sommet avec que des voisins visités ou un mur). Une fois une impasse atteinte, 
 il revient en arrière pour explorer d'autres voisins non visités du sommet précédent et cela se fait récursivement dans notre cas.
-Les sommets visités sont enregistrés dans un dictionnaire de set pour éviter les doublons et retracer le chemin menant au sommet d'arrivé.
+Les sommets visités sont enregistrés dans un dictionnaire de set pour éviter les doublons car un sommet ne peut être visité qu'une seul fois 
+mais un même sommet peut visité plusieurs autres sommets.
+
+Une fois le parcours terminée, on démarre du sommet d'arrivée puis on remonte de chaque sommet à son parent (le sommet qui l'a visité) 
+jusqu'à atteindre le sommet de départ et en inversant la séquence nous obtiendrons enfin le chemin menant du sommet de départ au sommet
+d'arrivé.
 
 Le parcours en profondeur ne garantit pas le chemin le plus court dans un graphe et il peut explorer inutilement de 
 nombreuses branches d’un graphe avant de trouver la solution.
 
 
-###### Exemple :
+###### Exemple de parcours en profondeur :
+<div style="text-align: center;">
+  <img src="Image/parcours_pronfondeur.jpg" alt="Parcours en profondeur" style="width: 50%; max-width: 400px;">
+  <p>Figure 1 : parcours en profondeur</p>
+</div>
 
 > ##### #### Parcours en largeur
 ###### Explication :
-###### Exemple :
+
+Le parcours en largeur est une méthode pour explorer un graphe de manière organisée en visitant les sommets niveau par 
+niveau. On commence par le sommet de départ, qu'on explore en visitant tous ses voisins directs. Une fois que tous ces 
+voisins sont visités, on passe à leurs voisins, puis aux voisins des voisins, et ainsi de suite, jusqu'à ce que tout le 
+graphe soit exploré.
+
+Pour y arriver, on utilise une file (**queue** dans notre programme) , une sorte de liste qui garde les sommets à visiter 
+dans l'ordre où on les découvre. On prend toujours le premier sommet de la file pour le visiter, puis on ajoute ses voisins 
+à la fin de la file, et ainsi de suite.
+
+###### Exemple de parcours en largeur :
+<div style="text-align: center;">
+  <img src="Image/parcours_largeur.jpg" alt="DParcours en largeur" style="width: 50%; max-width: 400px;">
+  <p>Figure 2 : parcours en largeur</p>
+</div>
 
 > ##### #### Parcours avec l’algorithme de Bellman-Ford
 ###### Explication :
@@ -118,13 +143,45 @@ nombreuses branches d’un graphe avant de trouver la solution.
 
 > ##### #### Parcours avec l’algorithme de Dijkstra
 ###### Explication :
-###### Exemple :
+L'algorithme de Dijkstra est un algorithme utilisé pour trouver les chemins les plus courts entre un sommet de départ et 
+tous les autres sommets d'un graphe pondéré. Il utilise une file de priorité (queue) pour explorer les sommets en fonction 
+de leur coût cumulé depuis le départ. Les sommets visités sont enregistrés dans une liste (visited) avec leur coût total 
+et leur prédécesseur. Lorsqu'un voisin accessible est trouvé, l'algorithme vérifie s'il est déjà dans la file et met à jour 
+son coût si un chemin plus court est découvert. Une fois le sommet d'arrivé atteint l'algorithme reconstitue le chemin 
+optimal en retraçant les prédécesseurs de l'arrivé au départ.
+
+###### Exemple de parcours dijkstra :
+<div style="text-align: center;">
+  <img src="Image/parcours_dijkstra.jpg" alt="DParcours dijkstra" style="width: 50%; max-width: 400px;">
+  <p>Figure 4 : parcours dijkstra</p>
+</div>
 
 > ##### #### Parcours avec A*
 ###### Explication :
-###### Exemple :
+L’algorithme A* combine une fonction heuristique de Manhattan et un coût de déplacement pour trouver le chemin le plus 
+efficace entre le sommet de départ et le sommet d'arrivé. Il commence par calculer les distances heuristiques de chaque 
+sommet à l’aide de la méthode heuristique_manhattan que nous avons implémenté, qui mesure la distance absolue en x et en 
+y jusqu’au sommet d'arrivé. L’algorithme maintient une file de priorité (queue), triée par le coût total d'accès (coût de 
+déplacement accumulé + heuristique de manhattan), et explore les voisins accessibles tout en mettant à jour les coûts et 
+les prédécesseurs. Une fois le sommet final atteint, l’algorithme reconstruit le chemin optimal en retraçant les prédécesseurs.
+
+###### Exemple de parcours A* :
+<div style="text-align: center;">
+  <img src="Image/parcours_a_etoile.jpg" alt="DParcours A*" style="width: 50%; max-width: 400px;">
+  <p>Figure 5 : parcours A*</p>
+</div>
 
 > ##### #### Parcours AllerÀToire
 ###### Explication :
-###### Exemple :
+Cet algorithme, nommé **allerAToire** effectue un parcours aléatoire en partant d'un sommet de départ pour atteindre le 
+sommet de fin. Il utilise une file (queue) pour gérer les sommets à explorer et suit deux objectifs principaux : (1) 
+construire un dictionnaire des sommets atteignables et leurs voisins, et (2) enregistrer le chemin parcouru sous forme de 
+relations entre sommets. Une fois le sommet final atteint ou la file vidée, l'algorithme retourne les sommets atteignables 
+et le chemin parcouru.S'agissant d'un parcours aléatoire, il ne retournera presque jamais le même parcours 2 fois de suite.
+
+###### Exemple du parcours AllerÀToire :
+<div style="text-align: center;">
+  <img src="Image/parcours_aleatoire.jpg" alt="DParcours aléatoire" style="width: 50%; max-width: 400px;">
+  <p>Figure 6 : parcours AllerÀToire</p>
+</div>
 
