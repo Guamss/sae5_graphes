@@ -1,6 +1,6 @@
 import unittest
 
-from back.src.sae5_graphes.models import Grille
+from web.back.src.sae5_graphes.models import Grille
 
 
 class TestGrille(unittest.TestCase):

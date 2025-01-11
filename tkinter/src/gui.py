@@ -463,7 +463,7 @@ class App(Tk):
             chemins = self.grille.a_star(self.start, self.end)
             self._display_results(chemins, self.start)
         except NotConnectedGraphException as e:
-            print(e.message)
+            self.alert_popup(e.message)
 
     def launch_parcours_en_largeur(self):
         """
