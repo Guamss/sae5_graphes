@@ -18,7 +18,7 @@ export class HexagonGridComponent implements OnInit, OnChanges {
     @Input() solution: Map<[number, number], [number, number]> | undefined;
     @Input() grid: Grid | undefined;
     @Input() selectedColor: string = 'black';
-    pathColor: string = 'gray';
+    pathColor: string = 'orange';
 
     calculatedPositions: { x: number, y: number }[] = [];
     isMouseDown: boolean = false;
@@ -80,7 +80,7 @@ export class HexagonGridComponent implements OnInit, OnChanges {
                             (this.grid.start[0] != col && this.grid.start[1] != row) ||
                             (this.grid.end[0] != col && this.grid.end[1] != row)
                         ) {
-                            this.grid.tab[row][col] = this.colorToNumber(this.selectedColor);
+                            this.grid.tab[row][col] = this.colorToNumber(this.pathColor); // change ici
                         }
                     }
 
@@ -146,6 +146,8 @@ export class HexagonGridComponent implements OnInit, OnChanges {
                 return 'green';
             case 10:
                 return 'yellow';
+            case 22:
+                return 'orange'
             case 10000:
                 return 'black';
             default:
@@ -161,6 +163,8 @@ export class HexagonGridComponent implements OnInit, OnChanges {
                 return 1;
             case 'red':
                 return 1;
+            case 'orange':
+                return 22;
             case 'aqua':
                 return 3;
             case 'green':
