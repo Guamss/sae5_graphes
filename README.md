@@ -6,7 +6,7 @@
 
 ---
 
-# 📋 Description
+# 📋 - Description
 
 **Chiffredeux** est une application développé par des étudiants en 3ème année de BUT Informatique à l'IUT de Vélizy. Elle permet de visualiser des parcours de graphes et de comprendre le fonctionnement des 
 algorithmes de recherche de chemins dans une grille hexagonale, où chaque hexagone possède un poids influençant le coût du chemin. 
@@ -282,7 +282,7 @@ et le chemin parcouru.S'agissant d'un parcours aléatoire, il ne retournera pres
   <p>Figure 6 : parcours AllerÀToire</p>
 </div>
 
-## 🤝 Contributeurs
+## 🤝 - Contributeurs
 
 - **CHOISY Alexis**
 - **DE SOUSA Florian**
