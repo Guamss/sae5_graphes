@@ -1,4 +1,4 @@
-from tkinter import messagebox, Canvas, Tk, IntVar, Menu, Frame, Scale, HORIZONTAL, Label, Button, LAST
+from tkinter import messagebox, Canvas, Tk, DoubleVar, Menu, Frame, Scale, HORIZONTAL, Label, Button, LAST, Text, Entry
 from math import cos, sin, sqrt, radians
 import random
 
@@ -13,15 +13,15 @@ YELLOW = "#FBC02D"
 PURPLE = "#BA68C8"
 RED = "#D50000"
 
-
 class ColorHexagon:
     def __init__(self, parent, x, y, length, color, id):
-        self.parent = parent  # Grille d'hexagones
-        self.x = x  # Longueur x
-        self.y = y  # Largeur y
-        self.length = length  # Taille
+
+        self.parent = parent
+        self.x = x
+        self.y = y
+        self.length = length
         self.color = color
-        self.id = id  # Format Colonne - Ligne
+        self.id = id
         self.selected = False
 
         self.draw()
@@ -29,7 +29,7 @@ class ColorHexagon:
     def draw(self):
         start_x = self.x
         start_y = self.y
-        angle = 60  # Angle de l'hexagone en degrés
+        angle = 60  
 
         # création des 6 côtés de l'hexagone
         coords = []
@@ -59,19 +59,18 @@ class App(Tk):
             window_width (int): Largeur de la fenêtre.
         """
         super().__init__()
-        self.scale_widget = None
         self.title("Hexagones")
         self.geometry(f"{window_height}x{window_width}")
 
         # Définir la taille initiale de la grille
+        self.hex_size = 20
         self.num_cols = num_cols
         self.num_rows = num_rows
-        self.hex_size = min((window_width * 0.6 / ((self.num_cols+1) * 1.5)),
-                            (window_height * 0.9 / ((self.num_rows+1) * sqrt(3))))
 
         self.hex_width = self.hex_size * 1.5  # Largeur d'un hexagone
         self.hex_height = self.hex_size * sqrt(3)  # Hauteur d'un hexagone
 
+        # Crée un canevas pour afficher les hexagones
         self.canvas = Canvas(self,
                              width=self.hex_width * self.num_cols + self.hex_width / 2,
                              height=self.hex_height * self.num_rows + self.hex_height,
@@ -83,7 +82,7 @@ class App(Tk):
         self.bind("<Configure>", self.on_resize)
         self.resize_id = None
         self.canvas.bind("<Button-1>", self.click)  # Clic simple
-        self.canvas.bind("<B1-Motion>", self.drag)  # Drag
+        self.canvas.bind("<B1-Motion>", self.drag)  # Dragging avec le clic gauche
 
         self.is_stopped_button_pressed = False
         self.sum_weight = 0
@@ -92,18 +91,55 @@ class App(Tk):
         self.start = self.grille.tab[0][self.num_cols - 1]
         self.end = self.grille.tab[self.num_rows - 1][0]
 
-        self.speed = IntVar()
-        self.old_speed = None
+        self.speed = DoubleVar()
 
         self.paths = []
         self.chemins = None
 
         self.create_elements()
 
+        # Création de la grille d'hexagones
         self.hexagons = {}
         self.init_grid(self.num_cols, self.num_rows, self.hex_size)
 
-        self.fen_size: tuple = (window_height, window_width)
+    def refresh(self):
+        print("self.start : ", self.start,"self.end : ", self.end)
+
+        length = self.entry_length.get()
+        width = self.entry_width.get()
+
+        if length.isdigit() and width.isdigit():
+            self.stop_algo_exec()
+            self.clear_arrows()
+            self.nbr_hexa(int(length), int(width))
+        else:
+            messagebox.showwarning("Entier uniquement", "Il faut entrer uniquement des nombres entiers")
+
+    def nbr_hexa(self, length, width):
+
+        if length <= 1 or width <= 1:
+            messagebox.showwarning("Problème de nombre", "il faut une grille de 2 par 2 minimum")
+            raise
+
+        # Modification du nombre de lignes et de colonnes
+        self.num_cols = length
+        self.num_rows = width
+
+        # Réinitialiser la grille d'hexagones
+        self.canvas.delete("all")
+        self.init_grid(self.num_cols, self.num_rows, self.hex_size)
+
+        self.grille = Grille(self.num_cols, self.num_rows)
+
+        if self.num_cols > 0 and self.num_rows > 0:
+            max_cols = min(self.num_cols, len(self.grille.tab[0]))
+            max_rows = min(self.num_rows, len(self.grille.tab))
+            self.start = self.grille.tab[0][min(self.num_cols - 1, max_cols - 1)]
+            self.end = self.grille.tab[min(self.num_rows - 1, max_rows - 1)][0]
+            self.on_resize_released()
+        else:
+            self.start = None
+            self.end = None
 
     def create_elements(self):
         """
@@ -132,13 +168,23 @@ class App(Tk):
         self.config(menu=menu_bar)
 
         frame_config_algo_exec = Frame(self)
-        frame_config_algo_exec.grid(row=0, column=10, rowspan=5, padx=20, pady=10,
-                                    sticky="ne")
 
-        Button(frame_config_algo_exec, text="Stopper l'exécution", command=self.stop_algo_exec).pack(side="bottom", padx=5, pady=5)
+        frame_config_algo_exec = Frame(self)
+        frame_config_algo_exec.grid(row=0, column=10, rowspan=5, padx=20, pady=10, sticky="ne")
 
-        self.scale_widget = Scale(frame_config_algo_exec, variable=self.speed, from_=1, to=1000, orient=HORIZONTAL)
-        self.scale_widget.pack(side="top", pady=5)
+        Button(frame_config_algo_exec, text="Stopper l'exécution", command=self.stop_algo_exec).pack(side="bottom", padx=5, pady=6)
+
+        Label(frame_config_algo_exec, text="Colonnes :").pack(side="top", padx=5, pady=6)
+        self.entry_length = Entry(frame_config_algo_exec)
+        self.entry_length.pack(side="top", padx=6, pady=6)
+
+        Label(frame_config_algo_exec, text="Lignes :").pack(side="top", padx=5, pady=6)
+        self.entry_width = Entry(frame_config_algo_exec)
+        self.entry_width.pack(side="top", padx=6, pady=6)
+
+        Button(frame_config_algo_exec, text="Rafraichir", command=self.refresh).pack(side="top", padx=6, pady=6)
+
+        Scale(frame_config_algo_exec, variable=self.speed, from_=1, to=1000, orient=HORIZONTAL).pack(side="top", pady=5)
         Label(frame_config_algo_exec, text="Vitesse d'exécution (en ms)").pack(side="top", pady=5)
 
         Button(self, text="Mur", bg=BLACK, fg=WHITE, command=lambda: self.set_color(BLACK)).grid(row=1, column=0,
@@ -193,19 +239,20 @@ class App(Tk):
                                  WHITE,
                                  id)
                 self.hexagons[id] = h
-                if self.start == self.grille.tab[r][c]:
-                    self.paint_hexagon(c, r, PURPLE)
-                elif self.end == self.grille.tab[r][c]:
-                    self.paint_hexagon(c, r, RED)
-                else:
-                    colors = {
-                        1: WHITE,
-                        3: BLUE,
-                        5: GREEN,
-                        10: YELLOW,
-                        self.grille.WALL: BLACK
-                    }
-                    self.paint_hexagon(c, r, colors[self.grille.tab[r][c].weight])
+                if r < len(self.grille.tab) and c < len(self.grille.tab[r]):
+                    if self.start == self.grille.tab[r][c]:
+                        self.paint_hexagon(c, r, PURPLE)
+                    elif self.end == self.grille.tab[r][c]:
+                        self.paint_hexagon(c, r, RED)
+                    else:
+                        colors = {
+                            1: WHITE,
+                            3: BLUE,
+                            5: GREEN,
+                            10: YELLOW,
+                            self.grille.WALL: BLACK
+                        }
+                        self.paint_hexagon(c, r, colors[self.grille.tab[r][c].weight])
 
         self.init_hexagones()
         self.selected_color = old_selected
@@ -273,7 +320,7 @@ class App(Tk):
 
         self.paths.append(self.canvas.create_line(
             start_x, start_y, end_x, end_y,
-            fill=color, width=self.hex_size//5, arrow=LAST
+            fill=color, width=self.hex_size//4, arrow=LAST
         ))
 
     def paint_hexagon(self, col: int, row: int, color: str):
@@ -287,7 +334,7 @@ class App(Tk):
         """
         hexagon = self.hexagons.get(f"{col}-{row}")
 
-        if color in [PURPLE, RED]:  # Départ ou arrivée
+        if color in [PURPLE, RED]:
             self.unique_color_replace()
             self.grille.tab[row][col].weight = 1
 
@@ -320,36 +367,26 @@ class App(Tk):
         if self.resize_id is not None:
             self.after_cancel(self.resize_id)
 
-        self.resize_id = self.after(300, self.on_resize_released)
+        self.resize_id = self.after(100, self.on_resize_released)
 
     def on_resize_released(self):
         """
         Recalcule les dimensions de la grille après un redimensionnement de la fenêtre.
         """
         height = self.winfo_height()
-
         width = self.winfo_width()
 
-        if self.fen_size != (height, width):
-            self.fen_size = (height, width)
+        self.hex_size = min((width * 0.6 / ((self.num_cols+1) * 1.5)),
+                            (height * 0.9 / ((self.num_rows+1) * sqrt(3))))
+        self.hex_width = self.hex_size * 1.5
+        self.hex_height = self.hex_size * sqrt(3)
+        self.canvas.config(width=(self.num_cols+2)*self.hex_width, height=(self.num_rows+2)*self.hex_height)
 
-            self.hex_size = min((width * 0.6 / ((self.num_cols+1) * 1.5)),
-                                (height * 0.9 / ((self.num_rows+1) * sqrt(3))))
-            self.hex_width = self.hex_size * 1.5
-            self.hex_height = self.hex_size * sqrt(3)
-            self.canvas.config(width=(self.num_cols+2)*self.hex_width, height=(self.num_rows+2)*self.hex_height)
+        self.canvas.delete("all")
 
-            self.canvas.delete("all")
-
-            self.init_grid(self.num_cols, self.num_rows, self.hex_size)
-            if self.chemins:
-                self.old_speed = self.speed.get()
-                self.scale_widget.config(state='disabled', from_=0)
-                self.speed.set(0)
-                for arrow in self.paths:
-                    self.canvas.delete(arrow)
-                self.paths = []
-                self._display_results(self.chemins[:], self.start)
+        self.init_grid(self.num_cols, self.num_rows, self.hex_size)
+        if self.chemins:
+            self._display_results(self.chemins[:], self.start)
 
     def paint_hexagon_on_click(self, x, y):
         """
@@ -384,7 +421,7 @@ class App(Tk):
 
     def clear_arrows(self):
         """
-        Efface toutes les flèches (chemins) affichées sur le canevas.
+        Réinitialise tous les hexagones à blanc.
         """
         self.sum_weight = 0
         for arrow in self.paths:
@@ -394,11 +431,12 @@ class App(Tk):
 
     def clear_all(self):
         """
-        Réinitialise tous les hexagones à blanc.
+        Réinitialise tous les hexagones à blanc
         """
         for hexagon in self.hexagons.values():
             y, x = map(int, hexagon.id.split("-"))
-            if not self.is_sommet_start_or_end(self.grille.tab[x][y]):
+            if x < len(self.grille.tab) and y < len(self.grille.tab[x]) and not self.is_sommet_start_or_end(
+                    self.grille.tab[x][y]):
                 self.grille.tab[x][y].weight = 1
                 hexagon.color = WHITE
                 self.canvas.itemconfigure(hexagon.id, fill=WHITE)
@@ -436,10 +474,9 @@ class App(Tk):
             random_color = random.choice(colors)
             col, row = map(int, hex_id.split("-"))
 
-            if not self.is_sommet_start_or_end(self.grille.tab[row][col]):
+            if row < len(self.grille.tab) and col < len(self.grille.tab[row]) and not self.is_sommet_start_or_end(
+                    self.grille.tab[row][col]):
                 self.paint_hexagon(col, row, random_color)
-                if row == 0:
-                    self.update()
 
     def init_hexagones(self):
         """
@@ -464,6 +501,7 @@ class App(Tk):
             self._display_results(chemins, self.start)
         except NotConnectedGraphException as e:
             self.alert_popup(e.message)
+
 
     def launch_parcours_en_largeur(self):
         """
@@ -583,7 +621,3 @@ class App(Tk):
             suivant = chemin[sommet]
             self.paint_path(sommet, suivant, RED)
             self.after(int(self.speed.get()), self._progressive_display_best, chemin, suivant)
-            if self.old_speed:
-                self.speed.set(self.old_speed)
-                self.scale_widget.config(state='normal', from_=1)
-                self.old_speed = None

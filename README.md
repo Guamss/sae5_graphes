@@ -281,3 +281,14 @@ et le chemin parcouru.S'agissant d'un parcours aléatoire, il ne retournera pres
   <img src="Image/parcours_aleatoire.jpg" alt="DParcours aléatoire" style="width: 50%; max-width: 400px;">
   <p>Figure 6 : parcours AllerÀToire</p>
 </div>
+
+## 🤝 Contributeurs
+
+- **CHOISY Alexis**
+- **DE SOUSA Florian**
+- **MOUSSAMIH Elias**
+- **PAVLETIC Thomas**
+- **SOUMARE Sidy**
+- **GRONDIN David**
+
+---
