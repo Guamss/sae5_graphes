@@ -18,7 +18,7 @@
 .main-content {
   display: flex;
   justify-content: space-between;
-  width: 100%;
+  /*width: 100%;*/
 }
 
 .color-buttons-container {
@@ -26,6 +26,8 @@
   flex-direction: column;
   gap: 10px;
   margin-right: 20px;
+  justify-content:center;
+  padding-right: 20px;
 }
 
 .grid-container {
