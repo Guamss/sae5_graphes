@@ -22,7 +22,7 @@ interactive et intuitive.
 * Présentation de l'interface web (angular)
 
 #### Aspect théorique :
-* Présentation des algorithmes (screen un exemple pour chaque parcours) (mettre des liens)
+* Présentation des algorithmes (screen un exemple pour chaque parcours) 
   - Parcours en profondeur 
   - Parcours en largeur
   - Parcours Bellman-ford
