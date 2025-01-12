@@ -1,4 +1,4 @@
-<h1 style="text-align:center;">Chiffredeux</h1>
+cd<h1 style="text-align:center;">Chiffredeux</h1>
 
 Chiffredeux est une application permettant de visualiser des parcours de graphes et de comprendre le fonctionnement des 
 algorithmes de recherche de chemins. Développée avec Python pour l'application de bureau, ainsi qu'Angular pour 
@@ -34,12 +34,14 @@ interactive et intuitive.
 Installation des dépendances et lancement du serveur web
 ```
 cd back
-pdm install
-pdm start
+pip install pdm
+python -m pdm install
+python -m pdm start
 ```
 
 ```
 cd front
+npm install -g @angular/cli@17
 npm i 
 ng serve
 ```
@@ -89,7 +91,7 @@ de communication entre les composants, facilitant les échanges de données et p
 > ##### Présentation de l'interface avec tkinter
 <div style="text-align: center;">
   <img src="Image/application.jpg" alt="Application avec tkinter" style="width: 50%; max-width: 400px;">
-  <p>Interface 1 avec tkinter</p>
+  <p>Interface avec tkinter</p>
 </div>
 
 L'interface graphique développée avec Tkinter est divisée en 4 grandes parties pour permettre une interaction claire et 
@@ -130,7 +132,13 @@ Située à droite de l’interface, cette section contient :
 Ce panneau permet à l'utilisateur de ralentir ou d'accélérer l'exécution des algorithmes pour une meilleure visualisation.
 
 > ##### Présentation de l'interface web
-...
+<div style="text-align: center;">
+  <img src="Image/interface_web.jpg" alt="Application web avec angular" style="width: 50%; max-width: 400px;">
+  <p>Interface web avec angular</p>
+</div>
+
+L'interface web s'inspire grandement de l'interface fait avec tkinter, on y retrouve la même approche et les mêmes fonctionalités
+décrite ci-dessus. Cependant suite à un manque de temps, nous n'avons pas pu la finaliser à 100%.
 
 > ### Aspect théorique : 
 À présent, nous allons présenter de manière théorique les différents parcours de graphe que nous avons implémentés dans 
