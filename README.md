@@ -63,7 +63,7 @@ Angular a été utilisé pour développer une interface utilisateur interactive 
 les données en temps réel. <br>
 
 * **API Flask :**
-Pour connecter nos algorithmes Python avec l’interface web développée en Angular, nous avons utilisé une API construite 
+Pour connecter nos algorithmes  avec l’interface web développée en Angular, nous avons utilisé une API construite 
 avec le framework Flask. Flask s’est avéré être un choix idéal car nous avions déjà eu l’opportunité de l’utiliser en 
 cours, ce qui nous a permis de tirer parti de notre expérience avec ce framework léger. <br>
 
@@ -78,7 +78,7 @@ Pour documenter l'API et tester les différentes routes facilement. Tout comme F
 
 ### Lancement de Tkinter :
 ```
-python .\Tkinter\src\gui.py
+python ./tkinter/src/main.py
 ```
 
 ### Lancement de l'API et d'Angular (complémentaires)
